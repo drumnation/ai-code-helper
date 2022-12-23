@@ -1,7 +1,7 @@
 import './App.css';
 import logo from './logo.svg';
 
-import { Button, Card, Checkbox, Input, Popover, Table } from 'antd';
+import { Button, Card, Checkbox, Input, Table } from 'antd';
 import {
   SyncOutlined,
   ArrowDownOutlined,
@@ -186,7 +186,7 @@ function App() {
             autoSize
             placeholder='Enter an email'
             onChange={(event) =>
-              updateState({ ...state, rootPrompt: event.target.value })
+              updateState({ ...state, emailResponse: event.target.value })
             }
             value={state.emailResponse}
           />
