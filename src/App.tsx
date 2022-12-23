@@ -1,8 +1,12 @@
 import './App.css';
 import logo from './logo.svg';
 
-import { Button, Card, Checkbox, Input, Table } from 'antd';
-import { SyncOutlined, ArrowDownOutlined } from '@ant-design/icons';
+import { Button, Card, Checkbox, Input, Popover, Table } from 'antd';
+import {
+  SyncOutlined,
+  ArrowDownOutlined,
+  CopyOutlined,
+} from '@ant-design/icons';
 import useApp from './App.hooks';
 import { fallacyColumns } from './App.logic';
 import { SummaryTable } from './components';
@@ -22,6 +26,7 @@ function App() {
     state,
     updateState,
     updateSummaryRecord,
+    handleCopy,
   } = useApp();
 
   return (
@@ -35,6 +40,8 @@ function App() {
           AI For Responding to High Conflict Individuals
         </h3>
         <Card
+          // @ts-ignore
+          align='left'
           title='Email to Reply To'
           style={{ width: '100%', marginTop: 20 }}
         >
@@ -164,8 +171,15 @@ function App() {
           Generate Email Response <SyncOutlined />
         </Button>
         <Card
+          // @ts-ignore
+          align='left'
           title='Response Email'
           style={{ width: '100%', marginBottom: 100 }}
+          extra={
+            <Button onClick={handleCopy}>
+              <CopyOutlined /> Copy
+            </Button>
+          }
         >
           <Input.TextArea
             style={{ height: '100%' }}

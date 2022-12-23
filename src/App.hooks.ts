@@ -108,6 +108,10 @@ function useApp() {
     emailResponse: false,
   });
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(state.emailResponse);
+  };
+
   const updateSummaryRecord = (
     index: number,
     type: 'action' | 'explain',
@@ -225,6 +229,7 @@ function useApp() {
     state,
     updateState,
     updateSummaryRecord,
+    handleCopy,
   };
 }
 
