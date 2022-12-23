@@ -77,10 +77,10 @@ I’m sure you can see how this pattern is psychologically damaging to the kids.
 
 function useApp() {
   const [state, updateState] = useState<State>({
-    sender: 'Nicole',
-    receiver: 'Dave',
+    sender: '',
+    receiver: '',
     thread: '',
-    email,
+    email: '',
     emailResponse: '',
     invalidArguments: [],
     factCheckedThreadSummary: [],
