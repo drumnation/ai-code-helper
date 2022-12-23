@@ -6,7 +6,7 @@ import { SyncOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import useApp from './App.hooks';
 import { fallacyColumns } from './App.logic';
 import { SummaryTable } from './components';
-import { email } from './App.prompts';
+import FormItem from 'antd/es/form/FormItem';
 
 function App() {
   const {
@@ -38,13 +38,32 @@ function App() {
           title='Email to Reply To'
           style={{ width: '100%', marginTop: 20 }}
         >
+          <FormItem label='Sender' style={{ marginTop: 10, marginBottom: 5 }}>
+            <Input
+              style={{ marginLeft: 10, width: '98%' }}
+              placeholder='Sender'
+              onChange={(event) =>
+                updateState({ ...state, sender: event.target.value })
+              }
+              value={state.sender}
+            />
+          </FormItem>
+          <FormItem label='Receiver' style={{ marginTop: 5, marginBottom: 10 }}>
+            <Input
+              placeholder='Receiver'
+              onChange={(event) =>
+                updateState({ ...state, receiver: event.target.value })
+              }
+              value={state.receiver}
+            />
+          </FormItem>
           <Input.TextArea
             autoSize
-            placeholder='Enter root prompt'
+            placeholder='Enter email to respond to'
             onChange={(event) =>
-              updateState({ ...state, rootPrompt: event.target.value })
+              updateState({ ...state, email: event.target.value })
             }
-            value={email}
+            value={state.email}
           />
 
           <Button
@@ -68,7 +87,7 @@ function App() {
           data={state.factCheckedThreadSummary}
           updateRecord={updateSummaryRecord}
         />
-        <ArrowDownOutlined style={{ marginTop: 50 }} />
+        {/* <ArrowDownOutlined style={{ marginTop: 50 }} />
         <Button
           style={{ marginBottom: 50, marginTop: 50 }}
           type='primary'
@@ -98,7 +117,7 @@ function App() {
           <pre style={{ whiteSpace: 'pre-wrap', textAlign: 'left' }}>
             {state.combinedKnowledge}
           </pre>
-        </Card>
+        </Card> */}
         <ArrowDownOutlined style={{ marginTop: 50, marginBottom: 50 }} />
         <Button
           style={{ marginBottom: 50 }}

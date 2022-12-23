@@ -77,7 +77,7 @@ const connectorPhrase = (action) => {
       return 'the argument that ';
     case 'ignore':
       return 'the argument that ';
-    case 'rebuttal':
+    case 'explain':
       return 'Make the counter-argument that ';
   }
 };
@@ -92,16 +92,20 @@ function capitalize(string) {
 
 export function transform(data: FactCheckedThreadSummary[]): string {
   let result = '';
+  console.debug('data', data);
   for (const item of data) {
-    if (item.rebuttal) {
+    if (item.explain) {
       result +=
         '• ' +
+        capitalize('deny') +
+        ' ' +
         connectorPhrase('deny') +
+        ' ' +
         item.argument +
         ' ' +
         connectorPhrase(item.action) +
         ' ' +
-        item.rebuttal +
+        item.explain +
         '\n';
     } else {
       result +=

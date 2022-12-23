@@ -18,20 +18,30 @@ const SummaryTable: React.FC<{
       title: 'Action',
       dataIndex: 'action',
       key: 'action',
-      width: 286,
+      width: '100%',
       render: (
         text: string,
         record: FactCheckedThreadSummary,
         index: number,
       ) => (
         <>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <Button.Group>
+              <Button
+                type={record.action === 'agree' ? 'primary' : 'default'}
+                onClick={() => updateRecord(index, 'action', 'agree')}
+              >
+                Agree
+              </Button>
+              <Button
+                type={record.action === 'disagree' ? 'primary' : 'default'}
+                onClick={() => updateRecord(index, 'action', 'disagree')}
+              >
+                Disagree
+              </Button>
+            </Button.Group>
+          </div>
           <Button.Group>
-            <Button
-              type={record.action === 'agree' ? 'primary' : 'default'}
-              onClick={() => updateRecord(index, 'action', 'agree')}
-            >
-              Agree
-            </Button>
             <Button
               type={record.action === 'deny' ? 'primary' : 'default'}
               onClick={() => updateRecord(index, 'action', 'deny')}
@@ -45,18 +55,20 @@ const SummaryTable: React.FC<{
               Ignore
             </Button>
             <Button
-              type={record.action === 'rebuttal' ? 'primary' : 'default'}
-              onClick={() => updateRecord(index, 'action', 'rebuttal')}
+              type={record.action === 'explain' ? 'primary' : 'default'}
+              onClick={() => updateRecord(index, 'action', 'explain')}
             >
-              Rebuttal
+              Explain
             </Button>
           </Button.Group>
           <div style={{ height: 10 }} />
           <Input.TextArea
             style={{ height: '100%' }}
-            disabled={record.action !== 'rebuttal'}
-            placeholder='Enter rebuttal'
-            onClick={(text) => updateRecord(index, 'action', 'rebuttal', text)}
+            disabled={record.action !== 'explain'}
+            placeholder='Enter explain'
+            onChange={(event) =>
+              updateRecord(index, 'explain', 'explain', event.target.value)
+            }
           />
         </>
       ),

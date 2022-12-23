@@ -1,9 +1,14 @@
-export type SummaryAction = 'agree' | 'deny' | 'ignore' | 'rebuttal';
+export type SummaryAction =
+  | 'agree'
+  | 'disagree'
+  | 'deny'
+  | 'ignore'
+  | 'explain';
 
 export interface FactCheckedThreadSummary {
   argument: string;
   action: SummaryAction;
-  rebuttal: string;
+  explain: string;
 }
 
 export interface Fallacy {
@@ -13,6 +18,10 @@ export interface Fallacy {
 }
 
 export interface State {
+  sender: string;
+  receiver: string;
+  thread: string;
+  email: string;
   emailResponse: string;
   invalidArguments: Fallacy[];
   factCheckedThreadSummary: FactCheckedThreadSummary[];
