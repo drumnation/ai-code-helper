@@ -7,14 +7,18 @@ export async function getRootPrompt({
   state,
   includeFallacyFinder,
   includeSummaryResponses,
+  enableWordCount,
+  promptWordCount,
 }): Promise<State> {
   const context = `Here is an email from ${state.sender} to respond to for context:\n\n${state.email}`;
 
   const instruction = `Write a response email as ${state.receiver} to ${
     state.sender
-  }.\n• Make sure the email response is brief.\n• The tone is purely informative.\n• The language communicating the ideas is firm.\n• The overall tone of the response is friendly.\n\n${
+  }.\n• Make sure the email response is ${
+    enableWordCount === true ? promptWordCount + ' words long' : 'brief'
+  }.\n• The tone is purely informative.\n• The language communicating the ideas is firm.\n• The overall tone of the response is friendly.\n\n${
     includeSummaryResponses ? transform(state.factCheckedThreadSummary) : ''
-  }\n\n${includeFallacyFinder ? parseFallacies(state.invalidArguments) : ''}`;
+  }\n${includeFallacyFinder ? parseFallacies(state.invalidArguments) : ''}`;
 
   const rootPrompt = `${context}\n\n${instruction}`;
 

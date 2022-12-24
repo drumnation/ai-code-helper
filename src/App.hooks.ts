@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
-import { callChatGPT } from './App.logic';
+import { callChatGPT, wordCount } from './App.logic';
 
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -90,9 +90,14 @@ function useApp() {
   });
 
   const [includeFallacyFinder, setIncludeFallacyFinder] = useState(true);
+  const [promptWordCount, setPromptWordCount] = useState<number>(300);
+  const [enableWordCount, setEnableWordCount] = useState<boolean>(false);
 
   const handleFallacyFinderChange = (event) => {
     setIncludeFallacyFinder(event.target.checked);
+  };
+  const handleToggleWordCount = () => {
+    setEnableWordCount(!enableWordCount);
   };
 
   const [includeSummaryResponses, setIncludeSummaryResponses] = useState(true);
@@ -107,6 +112,10 @@ function useApp() {
     rootPrompt: false,
     emailResponse: false,
   });
+
+  const handleChangeWordCount = (count: number) => {
+    setPromptWordCount(count);
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(state.emailResponse);
@@ -171,6 +180,7 @@ function useApp() {
         rootPrompt,
         combinedKnowledge,
       });
+      generateRootPrompt();
       handleLoading({ type: 'expertFeedback', value: false });
     } catch (error) {
       console.debug('generate expert feedback error', error);
@@ -197,10 +207,23 @@ function useApp() {
       state,
       includeFallacyFinder,
       includeSummaryResponses,
+      enableWordCount,
+      promptWordCount,
     });
     updateState(data);
     handleLoading({ type: 'rootPrompt', value: false });
   };
+
+  useEffect(() => {
+    generateRootPrompt();
+    return () => {};
+  }, [
+    includeFallacyFinder,
+    includeSummaryResponses,
+    promptWordCount,
+    enableWordCount,
+    state.factCheckedThreadSummary,
+  ]);
 
   const generateDebatePrompt = async () => {
     handleLoading({ type: 'debatePrompt', value: true });
@@ -230,6 +253,10 @@ function useApp() {
     updateState,
     updateSummaryRecord,
     handleCopy,
+    handleChangeWordCount,
+    promptWordCount,
+    handleToggleWordCount,
+    enableWordCount,
   };
 }
 

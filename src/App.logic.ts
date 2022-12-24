@@ -73,6 +73,8 @@ const connectorPhrase = (action) => {
   switch (action) {
     case 'agree':
       return 'with the argument that ';
+    case 'disagree':
+      return 'with the argument that ';
     case 'deny':
       return 'the argument that ';
     case 'ignore':
@@ -127,4 +129,12 @@ export function parseFallacies(fallacies: Fallacy[]): string {
     result += `• Make the point that when you wrote "${fallacy.evidence}" that's an example of ${fallacy.fallacy}, which is ${fallacy.explanation}\n`;
   }
   return result;
+}
+
+export function wordCount(str) {
+  // Split the string into an array of words
+  const words = str.split(' ');
+
+  // Return the length of the array
+  return words.length;
 }

@@ -1,14 +1,14 @@
 import './App.css';
 import logo from './logo.svg';
 
-import { Button, Card, Checkbox, Input, Table } from 'antd';
+import { Button, Card, Checkbox, Input, Table, Slider, Form } from 'antd';
 import {
   SyncOutlined,
   ArrowDownOutlined,
   CopyOutlined,
 } from '@ant-design/icons';
 import useApp from './App.hooks';
-import { fallacyColumns } from './App.logic';
+import { fallacyColumns, wordCount } from './App.logic';
 import { SummaryTable } from './components';
 import FormItem from 'antd/es/form/FormItem';
 
@@ -27,6 +27,10 @@ function App() {
     updateState,
     updateSummaryRecord,
     handleCopy,
+    promptWordCount,
+    handleChangeWordCount,
+    enableWordCount,
+    handleToggleWordCount,
   } = useApp();
 
   return (
@@ -124,20 +128,33 @@ function App() {
           <pre style={{ whiteSpace: 'pre-wrap', textAlign: 'left' }}>
             {state.combinedKnowledge}
           </pre>
-        </Card> */}
-        <ArrowDownOutlined style={{ marginTop: 50, marginBottom: 50 }} />
-        <Button
-          style={{ marginBottom: 50 }}
-          type='primary'
-          onClick={generateRootPrompt}
-          loading={loading.rootPrompt}
-        >
-          Generate Root Prompt <SyncOutlined />
-        </Button>
-        <ArrowDownOutlined style={{ marginBottom: 50 }} />
+          </Card> */}
 
         {/* @ts-ignore */}
-        <Card title='Root Prompt' style={{ width: '100%' }} align='left'>
+        <Card
+          title='Root Prompt'
+          style={{ width: '100%', marginTop: 100 }}
+          // @ts-ignore
+          align='left'
+        >
+          <Checkbox
+            checked={enableWordCount}
+            onChange={handleToggleWordCount}
+            style={{ marginBottom: 15 }}
+          >
+            Enable Word Count
+          </Checkbox>
+          <Form.Item label='Word Count'>
+            <Slider
+              disabled={!enableWordCount}
+              min={10}
+              max={1000}
+              step={1}
+              tooltip={{ open: enableWordCount }}
+              value={promptWordCount}
+              onChange={handleChangeWordCount}
+            />
+          </Form.Item>
           <Checkbox
             checked={includeSummaryResponses}
             onChange={handleSummaryResponsesChange}
@@ -161,6 +178,14 @@ function App() {
             }
             value={state.rootPrompt}
           />
+          <Button
+            style={{ marginTop: 25 }}
+            type='primary'
+            onClick={generateRootPrompt}
+            loading={loading.rootPrompt}
+          >
+            Regenerate Root Prompt <SyncOutlined />
+          </Button>
         </Card>
         <Button
           style={{ marginBottom: 50, marginTop: 50 }}
@@ -173,7 +198,7 @@ function App() {
         <Card
           // @ts-ignore
           align='left'
-          title='Response Email'
+          title={`Response Email (${wordCount(state.emailResponse)} words)`}
           style={{ width: '100%', marginBottom: 100 }}
           extra={
             <Button onClick={handleCopy}>
