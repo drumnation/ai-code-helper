@@ -18,7 +18,7 @@ export async function getExpertFeedback({
 
   const fallacyFinderPrompt = `Here is the email or email thread for context:${emailOrThread}"\nI want you to act as a fallacy finder. You will be on the lookout for invalid arguments so you can call out any logical errors or inconsistencies that may be present in statements and discourse in this email. Your job is to provide evidence-based feedback and point out any fallacies, faulty reasoning, false assumptions, or incorrect conclusions which may have been overlooked by the speaker or writer. \nFormat as a stringified JSON array of objects. Add a key called explanation that explains what the fallacy means, a fallacy key that labels the fallacy, and an evidence key that provides the sentence being labeled.`;
 
-  const threadSummaryPrompt = `${state.email}\nCreate a summary of ${state.sender}'s points in this email thread provided for context.\nFormat the summary as a stringified JSON array of objects.\nInside each object store the bulleted text in a key called argument, and add keys named action and explain. The action key will either be agree, deny, explain, or ignore. The default action key is "ignore". The default explain key is empty string.`;
+  const threadSummaryPrompt = `${state.email}\nCreate a summary of ${state.sender}'s arguments in this email provided for context.\n Format each bullet as an array of stringified json objects. Store each argument inside an object there is a key called argument, and add keys named action and explain. The action key will either be agree, deny, explain, or ignore. The default action key is "ignore". The default explain key is empty string.`;
   const invalidArguments_ = await callChatGPT(fallacyFinderPrompt);
   const invalidArguments = JSON.parse(invalidArguments_.trimStart())?.map(
     (argument) => ({
@@ -33,18 +33,18 @@ export async function getExpertFeedback({
     email: state.email,
     emailResponse: '',
     invalidArguments,
-    factCheckedThreadSummary: '',
+    factCheckedThreadSummary: state.FactCheckedThreadSummary,
     oneSidedArgument: '',
     rootPrompt: '',
     combinedKnowledge: '',
   });
   const factCheckedThreadSummary_ = await callChatGPT(threadSummaryPrompt);
-  const factCheckedThreadSummary = JSON.parse(factCheckedThreadSummary_)?.map(
-    (summaryPoint) => ({
-      ...summaryPoint,
-      key: uuidv4(),
-    }),
-  );
+  const factCheckedThreadSummary = JSON.parse(
+    factCheckedThreadSummary_.trimStart(),
+  )?.map((summaryPoint) => ({
+    ...summaryPoint,
+    key: uuidv4(),
+  }));
   return {
     sender: state.sender,
     receiver: state.receiver,
