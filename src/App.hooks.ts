@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
-import { callChatGPT, wordCount } from './App.logic';
+import { callChatGPT, fixJSONError, wordCount } from './App.logic';
 
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -8,7 +8,12 @@ import {
   getResponseEmail,
   getRootPrompt,
 } from './App.prompts';
-import { HandleLoadingProps, State, SummaryAction } from './App.types';
+import {
+  FactCheckedThreadSummary,
+  HandleLoadingProps,
+  State,
+  SummaryAction,
+} from './App.types';
 
 export async function getExpertFeedback({
   state,
@@ -18,33 +23,43 @@ export async function getExpertFeedback({
 
   const fallacyFinderPrompt = `Here is the email or email thread for context:${emailOrThread}"\nI want you to act as a fallacy finder. You will be on the lookout for invalid arguments so you can call out any logical errors or inconsistencies that may be present in statements and discourse in this email. Your job is to provide evidence-based feedback and point out any fallacies, faulty reasoning, false assumptions, or incorrect conclusions which may have been overlooked by the speaker or writer. \nFormat as a stringified JSON array of objects. Add a key called explanation that explains what the fallacy means, a fallacy key that labels the fallacy, and an evidence key that provides the sentence being labeled.`;
 
-  const threadSummaryPrompt = `${state.email}\nCreate a summary of ${state.sender}'s arguments in this email provided for context.\n Format each bullet as an array of stringified json objects. Store each argument inside an object there is a key called argument, and add keys named action and explain. The action key will either be agree, deny, explain, or ignore. The default action key is "ignore". The default explain key is empty string.`;
+  const threadSummaryPrompt = `${state.email}\nCreate a summary of ${state.sender}'s arguments in this email provided for context.\n Format as a string with each summary bullet separated by a semi-colon.`;
   const invalidArguments_ = await callChatGPT(fallacyFinderPrompt);
-  const invalidArguments = JSON.parse(invalidArguments_.trimStart())?.map(
+  const invalidArguments = fixJSONError(invalidArguments_.trimStart())?.map(
     (argument) => ({
       ...argument,
       key: uuidv4(),
     }),
   );
-  updateState({
-    sender: state.sender,
-    receiver: state.receiver,
-    thread: state.thread,
-    email: state.email,
-    emailResponse: '',
-    invalidArguments,
-    factCheckedThreadSummary: state.FactCheckedThreadSummary,
-    oneSidedArgument: '',
-    rootPrompt: '',
-    combinedKnowledge: '',
-  });
+  // updateState({
+  //   sender: state.sender,
+  //   receiver: state.receiver,
+  //   thread: state.thread,
+  //   email: state.email,
+  //   emailResponse: '',
+  //   invalidArguments,
+  //   factCheckedThreadSummary: state.FactCheckedThreadSummary,
+  //   oneSidedArgument: '',
+  //   rootPrompt: '',
+  //   combinedKnowledge: '',
+  // });
   const factCheckedThreadSummary_ = await callChatGPT(threadSummaryPrompt);
-  const factCheckedThreadSummary = JSON.parse(
-    factCheckedThreadSummary_.trimStart(),
-  )?.map((summaryPoint) => ({
-    ...summaryPoint,
-    key: uuidv4(),
-  }));
+  console.log('factCheckedThreadSummary_ ', factCheckedThreadSummary_);
+  console.log(
+    'factCheckedThreadSummary_ ',
+    factCheckedThreadSummary_.split('; '),
+  );
+
+  const factCheckedThreadSummary = factCheckedThreadSummary_
+    .split('; ')
+    .map((summaryPoint) => ({
+      action: 'ignore',
+      explain: '',
+      argument: summaryPoint.trimStart(),
+      key: uuidv4(),
+    }));
+
+  console.log('factCheckedThreadSummary!!!', factCheckedThreadSummary);
   return {
     sender: state.sender,
     receiver: state.receiver,
@@ -77,10 +92,10 @@ I’m sure you can see how this pattern is psychologically damaging to the kids.
 
 function useApp() {
   const [state, updateState] = useState<State>({
-    sender: '',
-    receiver: '',
+    sender: 'Nicole',
+    receiver: 'Dave',
     thread: '',
-    email: '',
+    email,
     emailResponse: '',
     invalidArguments: [],
     factCheckedThreadSummary: [],
@@ -88,10 +103,15 @@ function useApp() {
     rootPrompt: '',
     combinedKnowledge: '',
   });
+  const [summary, updateSummary] = useState<FactCheckedThreadSummary[]>([
+    { argument: '', action: 'ignore', explain: '' },
+  ]);
 
   const [includeFallacyFinder, setIncludeFallacyFinder] = useState(true);
   const [promptWordCount, setPromptWordCount] = useState<number>(300);
   const [enableWordCount, setEnableWordCount] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const [rootPrompt, setRootPrompt] = useState<string>('');
 
   const handleFallacyFinderChange = (event) => {
     setIncludeFallacyFinder(event.target.checked);
@@ -128,32 +148,32 @@ function useApp() {
     explainText = '',
   ) => {
     console.debug('explainText', explainText);
-    const newFactCheckedSummary = state.factCheckedThreadSummary.map(
-      (record, i) => {
-        if (type === 'action') {
-          if (i === index) {
-            return {
-              ...record,
-              action: newAction,
-              explain: '',
-            };
-          }
+    const newFactCheckedSummary = summary.map((record, i) => {
+      if (type === 'action') {
+        if (i === index) {
+          return {
+            ...record,
+            action: newAction,
+            explain: '',
+          };
         }
-        if (type === 'explain') {
-          if (i === index) {
-            return {
-              ...record,
-              explain: explainText,
-            };
-          }
+      }
+      if (type === 'explain') {
+        if (i === index) {
+          return {
+            ...record,
+            explain: explainText,
+          };
         }
-        return record;
-      },
-    );
+      }
+      return record;
+    });
+    updateSummary(newFactCheckedSummary);
     updateState({ ...state, factCheckedThreadSummary: newFactCheckedSummary });
   };
 
   const generateExpertFeedback = async () => {
+    setError('');
     try {
       handleLoading({ type: 'expertFeedback', value: true });
       const {
@@ -168,6 +188,7 @@ function useApp() {
         receiver,
         thread,
       } = await getExpertFeedback({ state, updateState });
+      console.info('factCheckedThreadSummary5', factCheckedThreadSummary);
       updateState({
         sender,
         receiver,
@@ -180,39 +201,53 @@ function useApp() {
         rootPrompt,
         combinedKnowledge,
       });
+      updateSummary(factCheckedThreadSummary);
       generateRootPrompt();
       handleLoading({ type: 'expertFeedback', value: false });
     } catch (error) {
       console.debug('generate expert feedback error', error);
+      setError(`TRY AGAIN!\nAI Data Formatting Error:\n${error.message}`);
       handleLoading({ type: 'expertFeedback', value: false });
     }
   };
 
-  const handleLoading = ({ type, value }: HandleLoadingProps) => {
-    switch (type) {
-      case 'expertFeedback':
-        return updateLoading({ ...loading, expertFeedback: value });
-      case 'debatePrompt':
-        return updateLoading({ ...loading, debatePrompt: value });
-      case 'rootPrompt':
-        return updateLoading({ ...loading, rootPrompt: value });
-      case 'emailResponse':
-        return updateLoading({ ...loading, emailResponse: value });
-    }
-  };
+  const handleLoading = useCallback(
+    ({ type, value }: HandleLoadingProps) => {
+      switch (type) {
+        case 'expertFeedback':
+          return updateLoading({ ...loading, expertFeedback: value });
+        case 'debatePrompt':
+          return updateLoading({ ...loading, debatePrompt: value });
+        case 'rootPrompt':
+          return updateLoading({ ...loading, rootPrompt: value });
+        case 'emailResponse':
+          return updateLoading({ ...loading, emailResponse: value });
+      }
+    },
+    [loading],
+  );
 
-  const generateRootPrompt = async () => {
+  const generateRootPrompt = useCallback(async () => {
     handleLoading({ type: 'rootPrompt', value: true });
     const data = await getRootPrompt({
       state,
+      summary,
       includeFallacyFinder,
       includeSummaryResponses,
       enableWordCount,
       promptWordCount,
     });
-    updateState(data);
+    setRootPrompt(data.rootPrompt);
     handleLoading({ type: 'rootPrompt', value: false });
-  };
+  }, [
+    enableWordCount,
+    handleLoading,
+    includeFallacyFinder,
+    includeSummaryResponses,
+    promptWordCount,
+    state,
+    summary,
+  ]);
 
   useEffect(() => {
     generateRootPrompt();
@@ -257,6 +292,10 @@ function useApp() {
     promptWordCount,
     handleToggleWordCount,
     enableWordCount,
+    summary,
+    error,
+    setRootPrompt,
+    rootPrompt,
   };
 }
 

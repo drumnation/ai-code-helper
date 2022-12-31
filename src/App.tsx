@@ -1,20 +1,20 @@
 import './App.css';
 import logo from './logo.svg';
 
-import { Button, Card, Checkbox, Input, Table, Slider, Form } from 'antd';
-import {
-  SyncOutlined,
-  ArrowDownOutlined,
-  CopyOutlined,
-} from '@ant-design/icons';
+import { CopyOutlined, SyncOutlined } from '@ant-design/icons';
+import { Button, Card, Checkbox, Form, Input, Slider, Table } from 'antd';
+import FormItem from 'antd/es/form/FormItem';
 import useApp from './App.hooks';
 import { fallacyColumns, wordCount } from './App.logic';
 import { SummaryTable } from './components';
-import FormItem from 'antd/es/form/FormItem';
 
 function App() {
   const {
     generateDebatePrompt,
+    setRootPrompt,
+    rootPrompt,
+    summary,
+    error,
     generateEmailResponse,
     generateExpertFeedback,
     generateRootPrompt,
@@ -85,6 +85,11 @@ function App() {
           >
             Generate Expert Feedback <SyncOutlined />
           </Button>
+          <div style={{ color: 'red' }}>
+            <pre style={{ whiteSpace: 'pre-wrap', textAlign: 'left' }}>
+              {error}
+            </pre>
+          </div>
         </Card>
         <h3 className='Cool-font'>Logical Fallacies</h3>
         <Table
@@ -94,10 +99,7 @@ function App() {
           columns={fallacyColumns}
         />
         <h3 className='Cool-font'>Summarized Arguments</h3>
-        <SummaryTable
-          data={state.factCheckedThreadSummary}
-          updateRecord={updateSummaryRecord}
-        />
+        <SummaryTable data={summary} updateRecord={updateSummaryRecord} />
         {/* <ArrowDownOutlined style={{ marginTop: 50 }} />
         <Button
           style={{ marginBottom: 50, marginTop: 50 }}
@@ -173,10 +175,8 @@ function App() {
             style={{ height: '100%' }}
             autoSize
             placeholder='Enter root prompt'
-            onChange={(event) =>
-              updateState({ ...state, rootPrompt: event.target.value })
-            }
-            value={state.rootPrompt}
+            onChange={(event) => setRootPrompt(event.target.value)}
+            value={rootPrompt}
           />
           <Button
             style={{ marginTop: 25 }}

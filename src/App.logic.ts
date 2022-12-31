@@ -138,3 +138,25 @@ export function wordCount(str) {
   // Return the length of the array
   return words.length;
 }
+
+export function fixJSONError(jsonString) {
+  try {
+    // Attempt to parse the JSON string
+    const parsedJSON = JSON.parse(jsonString);
+    return parsedJSON;
+  } catch (error) {
+    if (
+      error instanceof SyntaxError &&
+      error.message.includes('Unexpected token')
+    ) {
+      // If a SyntaxError is raised and the message includes "Unexpected token", it means there's an issue with the JSON string
+      // We can fix this by removing any invalid characters that appear after the valid JSON data
+      const fixedJSON = jsonString.split('}')[0] + '}';
+      const parsedJSON = JSON.parse(fixedJSON);
+      return parsedJSON;
+    } else {
+      // If the error is not a SyntaxError or the message does not include "Unexpected token", throw the original error
+      throw error;
+    }
+  }
+}
