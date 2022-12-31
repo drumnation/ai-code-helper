@@ -84,19 +84,19 @@ export async function getDebatePrompt({ state }): Promise<State> {
   };
 }
 
-export async function getResponseEmail({ state }): Promise<State> {
-  const emailResponse = await callChatGPT(state.rootPrompt);
+export async function getResponseEmail({ state, rootPrompt }): Promise<State> {
+  const emailResponse = await callChatGPT(rootPrompt);
   console.debug('emailResponse', emailResponse);
   return {
     sender: state.sender,
     receiver: state.receiver,
     thread: state.thread,
     email: state.email,
-    emailResponse: emailResponse,
+    emailResponse: emailResponse.trimStart(),
     invalidArguments: state.invalidArguments,
     factCheckedThreadSummary: state.factCheckedThreadSummary,
     oneSidedArgument: state.oneSidedArgument,
-    rootPrompt: state.rootPrompt,
+    rootPrompt,
     combinedKnowledge: state.combinedKnowledge,
   };
 }
