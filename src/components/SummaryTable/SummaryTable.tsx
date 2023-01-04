@@ -1,10 +1,10 @@
 import React from 'react';
 
 import { Button, Input, Table } from 'antd';
-import { FactCheckedThreadSummary } from '../../App.types';
+import { Summary } from '../../App.types';
 
 const SummaryTable: React.FC<{
-  data: FactCheckedThreadSummary[];
+  data: Summary[];
   updateRecord;
 }> = ({ data, updateRecord }) => {
   const columns = [
@@ -19,11 +19,7 @@ const SummaryTable: React.FC<{
       dataIndex: 'action',
       key: 'action',
       width: '100%',
-      render: (
-        text: string,
-        record: FactCheckedThreadSummary,
-        index: number,
-      ) => (
+      render: (text: string, record: Summary, index: number) => (
         <>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <Button.Group>

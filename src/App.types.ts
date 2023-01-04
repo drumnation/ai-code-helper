@@ -5,7 +5,7 @@ export type SummaryAction =
   | 'ignore'
   | 'explain';
 
-export interface FactCheckedThreadSummary {
+export interface Summary {
   argument: string;
   action: SummaryAction;
   explain: string;
@@ -23,14 +23,27 @@ export interface State {
   thread: string;
   email: string;
   emailResponse: string;
-  invalidArguments: Fallacy[];
-  factCheckedThreadSummary: FactCheckedThreadSummary[];
+  fallacies: Fallacy[];
+  summary: Summary[];
   oneSidedArgument: string;
   rootPrompt: string;
   combinedKnowledge: string;
 }
 
 export interface HandleLoadingProps {
-  type: 'expertFeedback' | 'debatePrompt' | 'rootPrompt' | 'emailResponse';
+  type:
+    | 'fallacies'
+    | 'summary'
+    | 'debatePrompt'
+    | 'rootPrompt'
+    | 'emailResponse';
   value: boolean;
+}
+
+export interface LoadingState {
+  fallacies: boolean;
+  summary: boolean;
+  debatePrompt: boolean;
+  rootPrompt: boolean;
+  emailResponse: boolean;
 }

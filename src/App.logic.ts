@@ -1,5 +1,5 @@
 import { Configuration, OpenAIApi } from 'openai';
-import { FactCheckedThreadSummary, Fallacy } from './App.types';
+import { Summary, Fallacy } from './App.types';
 
 const configuration = new Configuration({
   apiKey: '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',
@@ -92,7 +92,7 @@ function capitalize(string) {
   return capitalized.join(' ');
 }
 
-export function transform(data: FactCheckedThreadSummary[]): string {
+export function transform(data: Summary[]): string {
   let result = '';
   console.debug('data', data);
   for (const item of data) {

@@ -1,111 +1,82 @@
 import { useCallback, useEffect, useState } from 'react';
-import './App.css';
-import { callChatGPT, fixJSONError, wordCount } from './App.logic';
 
-import { v4 as uuidv4 } from 'uuid';
 import {
   getDebatePrompt,
+  getFallacies,
   getResponseEmail,
   getRootPrompt,
+  getSummary,
 } from './App.prompts';
 import {
-  FactCheckedThreadSummary,
+  Summary,
   HandleLoadingProps,
   State,
   SummaryAction,
+  Fallacy,
+  LoadingState,
 } from './App.types';
 
-export async function getExpertFeedback({
-  state,
-  updateState,
-}): Promise<State> {
-  const emailOrThread = state.thread === '' ? state.email : state.thread;
-
-  const fallacyFinderPrompt = `Here is the email or email thread for context:${emailOrThread}"\nI want you to act as a fallacy finder. You will be on the lookout for invalid arguments so you can call out any logical errors or inconsistencies that may be present in statements and discourse in this email. Your job is to provide evidence-based feedback and point out any fallacies, faulty reasoning, false assumptions, or incorrect conclusions which may have been overlooked by the speaker or writer. \nFormat as a stringified JSON array of objects. Add a key called explanation that explains what the fallacy means, a fallacy key that labels the fallacy, and an evidence key that provides the sentence being labeled.`;
-
-  const threadSummaryPrompt = `${state.email}\nCreate a summary of ${state.sender}'s arguments in this email provided for context.\n Format as a string with each summary bullet separated by a semi-colon.`;
-  const invalidArguments_ = await callChatGPT(fallacyFinderPrompt);
-  const invalidArguments = fixJSONError(invalidArguments_.trimStart())?.map(
-    (argument) => ({
-      ...argument,
-      key: uuidv4(),
-    }),
-  );
-  // updateState({
-  //   sender: state.sender,
-  //   receiver: state.receiver,
-  //   thread: state.thread,
-  //   email: state.email,
-  //   emailResponse: '',
-  //   invalidArguments,
-  //   factCheckedThreadSummary: state.FactCheckedThreadSummary,
-  //   oneSidedArgument: '',
-  //   rootPrompt: '',
-  //   combinedKnowledge: '',
-  // });
-  const factCheckedThreadSummary_ = await callChatGPT(threadSummaryPrompt);
-  console.log('factCheckedThreadSummary_ ', factCheckedThreadSummary_);
-  console.log(
-    'factCheckedThreadSummary_ ',
-    factCheckedThreadSummary_.split('; '),
-  );
-
-  const factCheckedThreadSummary = factCheckedThreadSummary_
-    .split('; ')
-    .map((summaryPoint) => ({
-      action: 'ignore',
-      explain: '',
-      argument: summaryPoint.trimStart(),
-      key: uuidv4(),
-    }));
-
-  console.log('factCheckedThreadSummary!!!', factCheckedThreadSummary);
-  return {
-    sender: state.sender,
-    receiver: state.receiver,
-    thread: state.thread,
-    email: state.email,
-    emailResponse: '',
-    invalidArguments,
-    factCheckedThreadSummary,
-    oneSidedArgument: '',
-    rootPrompt: '',
-    combinedKnowledge: '',
-  };
-}
-
-interface LoadingState {
-  expertFeedback: boolean;
-  debatePrompt: boolean;
-  rootPrompt: boolean;
-  emailResponse: boolean;
-}
-
-export const email = `"Thanks, Dan. Dave updated the daycare. I am assuming he told the kids he was picking up this morning and about the plans he mentioned so am now worried they will confused/upset tonight. Dave never shares info with me so I don’t know what the plans were, though.
-
-He missed Jules’ Christmas program yesterday without letting me or Jules know he wouldn’t be there. My sister flew out and my parents drove 12 hours to attend. Jules asked me why dad wasn’t there. Dave failed to inform any of his family about the program either. 
-
-There was a ridiculous backpack issue he caused last week/this week that the daycare finally had to address with him (after he dismissed me and hung up on me when I tried). 
-
-I’m sure you can see how this pattern is psychologically damaging to the kids. There are issues several times each week where he forgets important things, doesn’t communicate, messes up the schedule, etc. etc. When we were married I handled it all and fixed it all for him, but with shared custody I can no longer protect the kids from it fully. This is the simplest the kids’ lives will ever be and Dave still struggles. Due to his ADHD, it doesn’t seem that he is able to be a competent parent on his own, nor emotionally mature enough to handle 50/50 custody. I continue to very concerned."
-`;
-
 function useApp() {
-  const [state, updateState] = useState<State>({
+  const initialState: State = {
     sender: '',
     receiver: '',
     thread: '',
     email: '',
     emailResponse: '',
-    invalidArguments: [],
-    factCheckedThreadSummary: [],
+    fallacies: [],
+    summary: [],
     oneSidedArgument: '',
     rootPrompt: '',
     combinedKnowledge: '',
-  });
-  const [summary, updateSummary] = useState<FactCheckedThreadSummary[]>([
-    { argument: '', action: 'ignore', explain: '' },
-  ]);
+  };
+  const [state, updateState] = useState<State>(initialState);
+
+  const [fallacies, updateFallacies] = useState<Fallacy[]>([]);
+
+  const [summary, updateSummary] = useState<Summary[]>([]);
+
+  const [isSendEmail, updateIsSendEmail] = useState<boolean>(true);
+
+  const handleUpdateIsSendEmail = () => {
+    updateIsSendEmail(!isSendEmail);
+    updateState(initialState);
+    updateSummary([]);
+    updateFallacies([]);
+    updateSendEmailPoints(['']);
+  };
+
+  const [sendEmailPoints, updateSendEmailPoints] = useState<string[]>(['']);
+
+  const handleUpdateSendEmailPoints = ({ newPoint, index }) => {
+    const newSendEmailPoints = sendEmailPoints.map((record: '', i) => {
+      if (i === index) {
+        return newPoint;
+      } else {
+        return record;
+      }
+    });
+    updateSendEmailPoints(newSendEmailPoints);
+  };
+
+  const handleAddNewSendEmailPoint = ({
+    index,
+    sendEmailPoints: sendEmailPoints_,
+  }) => {
+    sendEmailPoints_.splice(index + 1, 0, '');
+    updateSendEmailPoints([...sendEmailPoints_]);
+  };
+
+  const handleRemoveSendEmailPoint = ({
+    index,
+    sendEmailPoints: sendEmailPoints_,
+  }) => {
+    if (sendEmailPoints_.length !== 1) {
+      sendEmailPoints_.splice(index, 1);
+      updateSendEmailPoints([...sendEmailPoints_]);
+    } else {
+      updateSendEmailPoints(['']);
+    }
+  };
 
   const [includeFallacyFinder, setIncludeFallacyFinder] = useState(true);
   const [promptWordCount, setPromptWordCount] = useState<number>(300);
@@ -127,7 +98,8 @@ function useApp() {
   };
 
   const [loading, updateLoading] = useState<LoadingState>({
-    expertFeedback: false,
+    fallacies: false,
+    summary: false,
     debatePrompt: false,
     rootPrompt: false,
     emailResponse: false,
@@ -147,8 +119,7 @@ function useApp() {
     newAction: SummaryAction,
     explainText = '',
   ) => {
-    console.debug('explainText', explainText);
-    const newFactCheckedSummary = summary.map((record, i) => {
+    const newSummary = summary.map((record, i) => {
       if (type === 'action') {
         if (i === index) {
           return {
@@ -168,18 +139,18 @@ function useApp() {
       }
       return record;
     });
-    updateSummary(newFactCheckedSummary);
-    updateState({ ...state, factCheckedThreadSummary: newFactCheckedSummary });
+    updateSummary(newSummary);
+    updateState({ ...state, summary: newSummary });
   };
 
-  const generateExpertFeedback = async () => {
+  const generateFallacies = async () => {
     setError('');
     try {
-      handleLoading({ type: 'expertFeedback', value: true });
+      handleLoading({ type: 'fallacies', value: true });
       const {
         emailResponse,
-        invalidArguments,
-        factCheckedThreadSummary,
+        fallacies,
+        summary,
         oneSidedArgument,
         rootPrompt,
         combinedKnowledge,
@@ -187,35 +158,74 @@ function useApp() {
         sender,
         receiver,
         thread,
-      } = await getExpertFeedback({ state, updateState });
-      console.info('factCheckedThreadSummary5', factCheckedThreadSummary);
+      } = await getFallacies({ state, isSendEmail });
       updateState({
         sender,
         receiver,
         thread,
         email,
         emailResponse,
-        invalidArguments,
-        factCheckedThreadSummary,
+        fallacies,
+        summary,
         oneSidedArgument,
         rootPrompt,
         combinedKnowledge,
       });
-      updateSummary(factCheckedThreadSummary);
+      updateFallacies(fallacies);
       generateRootPrompt();
-      handleLoading({ type: 'expertFeedback', value: false });
+      handleLoading({ type: 'fallacies', value: false });
     } catch (error) {
       console.debug('generate expert feedback error', error);
-      setError(`TRY AGAIN!\nAI Data Formatting Error:\n${error.message}`);
-      handleLoading({ type: 'expertFeedback', value: false });
+      setError(`${error.message}`);
+      handleLoading({ type: 'fallacies', value: false });
+    }
+  };
+
+  const generateSummary = async () => {
+    setError('');
+    try {
+      handleLoading({ type: 'summary', value: true });
+      const {
+        emailResponse,
+        fallacies,
+        summary,
+        oneSidedArgument,
+        rootPrompt,
+        combinedKnowledge,
+        email,
+        sender,
+        receiver,
+        thread,
+      } = await getSummary({ state });
+      updateState({
+        sender,
+        receiver,
+        thread,
+        email,
+        emailResponse,
+        fallacies,
+        summary,
+        oneSidedArgument,
+        rootPrompt,
+        combinedKnowledge,
+      });
+      updateSummary(summary);
+      generateRootPrompt();
+      handleLoading({ type: 'summary', value: false });
+    } catch (error) {
+      console.debug('generate expert feedback error', error);
+      setError(`${error.message}`);
+      handleLoading({ type: 'summary', value: false });
     }
   };
 
   const handleLoading = useCallback(
     ({ type, value }: HandleLoadingProps) => {
       switch (type) {
-        case 'expertFeedback':
-          return updateLoading({ ...loading, expertFeedback: value });
+        case 'fallacies':
+          return updateLoading({ ...loading, fallacies: value });
+        case 'summary':
+          return updateLoading({ ...loading, summary: value });
         case 'debatePrompt':
           return updateLoading({ ...loading, debatePrompt: value });
         case 'rootPrompt':
@@ -228,19 +238,27 @@ function useApp() {
   );
 
   const generateRootPrompt = useCallback(async () => {
-    handleLoading({ type: 'rootPrompt', value: true });
-    const data = await getRootPrompt({
-      state,
-      summary,
-      includeFallacyFinder,
-      includeSummaryResponses,
-      enableWordCount,
-      promptWordCount,
-    });
-    setRootPrompt(data.rootPrompt);
-    handleLoading({ type: 'rootPrompt', value: false });
+    if ((!isSendEmail && state.email !== '') || isSendEmail) {
+      handleLoading({ type: 'rootPrompt', value: true });
+      const data = await getRootPrompt({
+        state,
+        summary,
+        fallacies,
+        includeFallacyFinder,
+        includeSummaryResponses,
+        enableWordCount,
+        promptWordCount,
+        isSendEmail,
+        sendEmailPoints,
+      });
+      setRootPrompt(data.rootPrompt);
+      handleLoading({ type: 'rootPrompt', value: false });
+    }
   }, [
+    sendEmailPoints,
+    isSendEmail,
     enableWordCount,
+    fallacies,
     handleLoading,
     includeFallacyFinder,
     includeSummaryResponses,
@@ -257,7 +275,12 @@ function useApp() {
     includeSummaryResponses,
     promptWordCount,
     enableWordCount,
-    state.factCheckedThreadSummary,
+    state.summary,
+    state.sender,
+    state.receiver,
+    state.email,
+    isSendEmail,
+    sendEmailPoints,
   ]);
 
   const generateDebatePrompt = async () => {
@@ -275,27 +298,35 @@ function useApp() {
   };
 
   return {
+    enableWordCount,
+    error,
+    fallacies,
     generateDebatePrompt,
     generateEmailResponse,
-    generateExpertFeedback,
+    generateFallacies,
     generateRootPrompt,
+    generateSummary,
+    handleChangeWordCount,
+    handleCopy,
     handleFallacyFinderChange,
     handleSummaryResponsesChange,
+    handleToggleWordCount,
+    handleUpdateIsSendEmail,
+    handleAddNewSendEmailPoint,
+    handleRemoveSendEmailPoint,
     includeFallacyFinder,
     includeSummaryResponses,
+    isSendEmail,
     loading,
+    promptWordCount,
+    rootPrompt,
+    setRootPrompt,
     state,
+    sendEmailPoints,
+    handleUpdateSendEmailPoints,
+    summary,
     updateState,
     updateSummaryRecord,
-    handleCopy,
-    handleChangeWordCount,
-    promptWordCount,
-    handleToggleWordCount,
-    enableWordCount,
-    summary,
-    error,
-    setRootPrompt,
-    rootPrompt,
   };
 }
 
