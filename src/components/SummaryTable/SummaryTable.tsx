@@ -21,42 +21,46 @@ const SummaryTable: React.FC<{
       width: '100%',
       render: (text: string, record: Summary, index: number) => (
         <>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <Button.Group>
-              <Button
-                type={record.action === 'agree' ? 'primary' : 'default'}
-                onClick={() => updateRecord(index, 'action', 'agree')}
-              >
-                Agree
-              </Button>
-              <Button
-                type={record.action === 'disagree' ? 'primary' : 'default'}
-                onClick={() => updateRecord(index, 'action', 'disagree')}
-              >
-                Disagree
-              </Button>
-            </Button.Group>
-          </div>
           <Button.Group>
             <Button
-              type={record.action === 'deny' ? 'primary' : 'default'}
-              onClick={() => updateRecord(index, 'action', 'deny')}
-            >
-              Deny
-            </Button>
-            <Button
+              style={{ width: 100 }}
               type={record.action === 'ignore' ? 'primary' : 'default'}
               onClick={() => updateRecord(index, 'action', 'ignore')}
             >
               Ignore
             </Button>
             <Button
-              type={record.action === 'explain' ? 'primary' : 'default'}
-              onClick={() => updateRecord(index, 'action', 'explain')}
+              style={{ width: 100 }}
+              type={record.action === 'deny' ? 'primary' : 'default'}
+              onClick={() => updateRecord(index, 'action', 'deny')}
             >
-              Explain
+              Deny
             </Button>
           </Button.Group>
+          <Button.Group>
+            <Button
+              style={{ width: 100 }}
+              type={record.action === 'agree' ? 'primary' : 'default'}
+              onClick={() => updateRecord(index, 'action', 'agree')}
+            >
+              Agree
+            </Button>
+            <Button
+              style={{ width: 100 }}
+              type={record.action === 'disagree' ? 'primary' : 'default'}
+              onClick={() => updateRecord(index, 'action', 'disagree')}
+            >
+              Disagree
+            </Button>
+          </Button.Group>
+
+          <Button
+            style={{ width: 200 }}
+            type={record.action === 'explain' ? 'primary' : 'default'}
+            onClick={() => updateRecord(index, 'action', 'explain')}
+          >
+            Explain
+          </Button>
           <div style={{ height: 10 }} />
           <Input.TextArea
             style={{ height: '100%' }}
@@ -74,7 +78,7 @@ const SummaryTable: React.FC<{
   return (
     <Table
       pagination={false}
-      style={{ width: '100%' }}
+      style={{ width: '100%', padding: '0px 0px' }}
       columns={columns}
       dataSource={data}
     />

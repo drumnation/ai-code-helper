@@ -61,7 +61,7 @@ function App() {
         <div style={{ display: 'flex', marginTop: 10 }}>
           <MailOutlined
             className='App-logo'
-            style={{ marginRight: 25, marginTop: 5 }}
+            style={{ marginRight: 15, marginTop: 5 }}
           />
           <div>HIM</div>
         </div>
@@ -89,7 +89,7 @@ function App() {
               </Button>
             }
           >
-            <FormItem label='Sender' style={{ marginTop: 10, marginBottom: 5 }}>
+            <FormItem label='Sender' style={{ marginBottom: 5 }}>
               <Input
                 style={{ marginLeft: 15, width: 200 }}
                 placeholder='Sender Name Here'
@@ -136,7 +136,7 @@ function App() {
               </Button>
             }
           >
-            <FormItem label='Sender' style={{ marginTop: 10, marginBottom: 5 }}>
+            <FormItem label='Sender' style={{ marginBottom: 5 }}>
               <Input
                 style={{ marginLeft: 15, width: 200 }}
                 placeholder='Sender Name Here'
@@ -170,7 +170,11 @@ function App() {
             />
             <Button.Group>
               <Button
-                style={{ marginBottom: 10, marginTop: 40, marginRight: 20 }}
+                style={{
+                  marginBottom: 10,
+                  marginTop: 30,
+                  width: 160,
+                }}
                 type='default'
                 onClick={generateFallacies}
                 loading={loading.fallacies}
@@ -178,7 +182,7 @@ function App() {
                 Fallacy Finder {!loading.fallacies && <PlayCircleOutlined />}
               </Button>
               <Button
-                style={{ marginBottom: 10, marginTop: 40 }}
+                style={{ marginBottom: 10, marginTop: 30, width: 160 }}
                 type='default'
                 onClick={generateSummary}
                 loading={loading.summary}
@@ -204,6 +208,7 @@ function App() {
             marginTop: 30,
             marginBottom: state.emailResponse !== '' ? 0 : 50,
           }}
+          bodyStyle={{ padding: 0 }}
           // @ts-ignore
           align='left'
           extra={
@@ -228,65 +233,67 @@ function App() {
           {summary.length > 0 && (
             <SummaryTable data={summary} updateRecord={updateSummaryRecord} />
           )}
-          <Checkbox
-            checked={enableWordCount}
-            onChange={handleToggleWordCount}
-            style={{
-              marginBottom: 15,
-              marginTop:
-                (fallacies.length > 0 && !isSendEmail) || summary.length > 0
-                  ? 15
-                  : 0,
-            }}
-          >
-            Enable Word Count
-          </Checkbox>
-          <Form.Item label='Word Count'>
-            <Slider
-              disabled={!enableWordCount}
-              min={10}
-              max={1000}
-              step={1}
-              tooltip={{ open: enableWordCount }}
-              value={promptWordCount}
-              onChange={handleChangeWordCount}
+          <div style={{ padding: 16 }}>
+            <Checkbox
+              checked={enableWordCount}
+              onChange={handleToggleWordCount}
+              style={{
+                marginBottom: 15,
+                marginTop:
+                  (fallacies.length > 0 && !isSendEmail) || summary.length > 0
+                    ? 15
+                    : 0,
+              }}
+            >
+              Enable Word Count
+            </Checkbox>
+            <Form.Item label='Word Count'>
+              <Slider
+                disabled={!enableWordCount}
+                min={10}
+                max={1000}
+                step={1}
+                tooltip={{ open: enableWordCount }}
+                value={promptWordCount}
+                onChange={handleChangeWordCount}
+              />
+            </Form.Item>
+            {!isSendEmail && (
+              <>
+                <Checkbox
+                  disabled={summary.length === 0}
+                  checked={includeSummaryResponses}
+                  onChange={handleSummaryResponsesChange}
+                  style={{ marginBottom: 15 }}
+                >
+                  Include Summary Responses
+                </Checkbox>
+                <Checkbox
+                  disabled={fallacies.length === 0}
+                  checked={includeFallacyFinder}
+                  onChange={handleFallacyFinderChange}
+                  style={{ marginBottom: 15 }}
+                >
+                  Include Fallacy Prompts
+                </Checkbox>
+              </>
+            )}
+            <Input.TextArea
+              style={{ height: '100%' }}
+              autoSize
+              placeholder='Enter root prompt'
+              onChange={(event) => setRootPrompt(event.target.value)}
+              value={rootPrompt}
             />
-          </Form.Item>
-          {!isSendEmail && (
-            <>
-              <Checkbox
-                disabled={summary.length === 0}
-                checked={includeSummaryResponses}
-                onChange={handleSummaryResponsesChange}
-                style={{ marginBottom: 15 }}
-              >
-                Include Summary Responses
-              </Checkbox>
-              <Checkbox
-                disabled={fallacies.length === 0}
-                checked={includeFallacyFinder}
-                onChange={handleFallacyFinderChange}
-                style={{ marginBottom: 15 }}
-              >
-                Include Fallacy Prompts
-              </Checkbox>
-            </>
-          )}
-          <Input.TextArea
-            style={{ height: '100%' }}
-            autoSize
-            placeholder='Enter root prompt'
-            onChange={(event) => setRootPrompt(event.target.value)}
-            value={rootPrompt}
-          />
-          <Button
-            style={{ marginBottom: 0, marginTop: 20 }}
-            type='primary'
-            onClick={generateEmailResponse}
-            loading={loading.emailResponse}
-          >
-            Generate Email {!loading.emailResponse && <MailOutlined />}
-          </Button>
+            <Button
+              style={{ marginBottom: 0, marginTop: 20 }}
+              type='primary'
+              onClick={generateEmailResponse}
+              loading={loading.emailResponse}
+            >
+              Generate Email {!loading.emailResponse && <MailOutlined />}
+            </Button>
+          </div>
         </Card>
         {state.emailResponse !== '' && (
           <Card
@@ -297,7 +304,8 @@ function App() {
                 ? ' (' + wordCount(state.emailResponse) + 'words)'
                 : ''
             }`}
-            style={{ width: '100%', marginBottom: 100, marginTop: 30 }}
+            bodyStyle={{ padding: 0 }}
+            style={{ width: '100%', marginBottom: 20, marginTop: 30 }}
             extra={
               state.emailResponse !== '' && (
                 <Button onClick={handleCopy}>
@@ -314,37 +322,40 @@ function App() {
                 columns={fallacyColumns}
               />
             )}
-            <Input.TextArea
-              disabled={state.emailResponse === ''}
-              style={{ height: '100%' }}
-              autoSize
-              placeholder='Enter an email'
-              onChange={(event) =>
-                updateState({ ...state, emailResponse: event.target.value })
-              }
-              value={state.emailResponse}
-            />
-            {isSendEmail && state.emailResponse !== '' && (
-              <>
-                <Button
-                  style={{ marginBottom: 10, marginTop: 40 }}
-                  type='default'
-                  onClick={generateFallacies}
-                  loading={loading.fallacies}
-                >
-                  Fallacy Finder {!loading.fallacies && <PlayCircleOutlined />}
-                </Button>
-                {error !== '' && (
-                  <Space direction='vertical' style={{ width: '100%' }}>
-                    <Alert
-                      message='Error! Please try again.'
-                      description={error}
-                      type='error'
-                    />
-                  </Space>
-                )}
-              </>
-            )}
+            <div style={{ padding: 16 }}>
+              <Input.TextArea
+                disabled={state.emailResponse === ''}
+                style={{ height: '100%' }}
+                autoSize
+                placeholder='Enter an email'
+                onChange={(event) =>
+                  updateState({ ...state, emailResponse: event.target.value })
+                }
+                value={state.emailResponse}
+              />
+              {isSendEmail && state.emailResponse !== '' && (
+                <>
+                  <Button
+                    style={{ marginBottom: 10, marginTop: 30, width: 160 }}
+                    type='default'
+                    onClick={generateFallacies}
+                    loading={loading.fallacies}
+                  >
+                    Fallacy Finder{' '}
+                    {!loading.fallacies && <PlayCircleOutlined />}
+                  </Button>
+                  {error !== '' && (
+                    <Space direction='vertical' style={{ width: '100%' }}>
+                      <Alert
+                        message='Error! Please try again.'
+                        description={error}
+                        type='error'
+                      />
+                    </Space>
+                  )}
+                </>
+              )}
+            </div>
           </Card>
         )}
       </div>
@@ -386,8 +397,4 @@ export default App;
             {state.combinedKnowledge}
           </pre>
           </Card> */
-}
-
-{
-  /* @ts-ignore */
 }
