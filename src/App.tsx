@@ -77,7 +77,7 @@ function App() {
           <Card
             // @ts-ignore
             align='left'
-            title='Compose a New Email'
+            title='New Email'
             style={{ width: '100%' }}
             extra={
               <Button
@@ -124,7 +124,7 @@ function App() {
           <Card
             // @ts-ignore
             align='left'
-            title='Compose a Response Email'
+            title='Reply'
             style={{ width: '100%' }}
             extra={
               <Button
