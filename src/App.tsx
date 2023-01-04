@@ -175,8 +175,7 @@ function App() {
                 onClick={generateFallacies}
                 loading={loading.fallacies}
               >
-                Analyze for Fallacies{' '}
-                {!loading.fallacies && <PlayCircleOutlined />}
+                Fallacy Finder {!loading.fallacies && <PlayCircleOutlined />}
               </Button>
               <Button
                 style={{ marginBottom: 10, marginTop: 40 }}
@@ -184,8 +183,7 @@ function App() {
                 onClick={generateSummary}
                 loading={loading.summary}
               >
-                Summarize Arguments{' '}
-                {!loading.summary && <UnorderedListOutlined />}
+                Summarizer {!loading.summary && <UnorderedListOutlined />}
               </Button>
             </Button.Group>
             {error !== '' && (
@@ -334,8 +332,7 @@ function App() {
                   onClick={generateFallacies}
                   loading={loading.fallacies}
                 >
-                  Analyze for Fallacies{' '}
-                  {!loading.fallacies && <PlayCircleOutlined />}
+                  Fallacy Finder {!loading.fallacies && <PlayCircleOutlined />}
                 </Button>
                 {error !== '' && (
                   <Space direction='vertical' style={{ width: '100%' }}>
