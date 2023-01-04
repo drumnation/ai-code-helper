@@ -76,15 +76,6 @@
   }
 }
 
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-  select:focus,
-  textarea:focus,
-  input:focus {
-    font-size: 16px;
-    background: #eee;
-  }
-}
-
 input[type='color'],
 input[type='date'],
 input[type='datetime'],
@@ -99,8 +90,15 @@ input[type='text'],
 input[type='time'],
 input[type='url'],
 input[type='week'],
-select:focus,
-input:focus,
 textarea {
-  font-size: 16px;
+  font-size: 16px !important;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  select:focus,
+  input:focus,
+  textarea:focus {
+    font-size: 16px !important;
+    background: #eee;
+  }
 }
