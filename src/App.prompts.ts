@@ -61,23 +61,28 @@ export async function getSummary({ state }): Promise<State> {
 }
 
 export async function getRootPrompt({
-  state,
-  summary,
+  enableWordCount,
   fallacies,
   includeFallacyFinder,
   includeSummaryResponses,
-  enableWordCount,
-  promptWordCount,
+  isFirm,
   isSendEmail,
+  promptWordCount,
   sendEmailPoints,
+  state,
+  summary,
 }): Promise<State> {
   const sender = state.sender !== '' ? state.sender : 'SENDER';
   const receiver = state.receiver !== '' ? state.receiver : 'RECEIVER';
   const context = `Here is an email from ${state.sender} to respond to for context:\n\n"${state.email}"\n`;
 
+  const tone = isFirm
+    ? '• Do not apologize or use the words "apology", or "apologize"'
+    : '• The overall tone of the response is friendly and apologetic.';
+
   const biff = `• Make sure the email response is ${
     enableWordCount === true ? promptWordCount + ' words long' : 'brief'
-  }.\n• The tone is purely informative.\n• The language communicating the ideas is firm.\n• The overall tone of the response is friendly.`;
+  }.\n• The message is purely informative.\n• The language communicating the ideas is firm.\n${tone}`;
 
   const sendOrReplyPrompt1 = isSendEmail
     ? `Write an email from ${sender} to ${receiver}.`

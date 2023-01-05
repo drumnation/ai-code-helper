@@ -77,7 +77,7 @@ const connectorPhrase = (action) => {
     case 'deny':
       return 'the argument that ';
     case 'ignore':
-      return 'the argument that ';
+      return 'and do not respond to the argument that ';
     case 'explain':
       return 'Make the counter-argument that ';
   }
@@ -125,7 +125,7 @@ export function transform(data: Summary[]): string {
 export function parseFallacies(fallacies: Fallacy[]): string {
   let result = '';
   for (const fallacy of fallacies) {
-    result += `• Make the point that when you wrote "${fallacy.evidence}" that's an example of ${fallacy.fallacy}, which is ${fallacy.explanation}\n`;
+    result += `• Make the point that when you wrote "${fallacy.evidence}" that's an example of ${fallacy.fallacy}. ${fallacy.explanation}\n`;
   }
   return result;
 }

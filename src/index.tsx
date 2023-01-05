@@ -3,10 +3,14 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import smartlookClient from 'smartlook-client';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,
 );
+
+smartlookClient.init('43bc84d9a8406exxxxxxxxxb5601f5bbf8d2ed');
+
 root.render(
   <React.StrictMode>
     <App />

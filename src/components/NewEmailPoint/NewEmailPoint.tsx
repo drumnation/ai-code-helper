@@ -40,12 +40,6 @@ function NewEmailPoint({
                 sendEmailPoints,
               });
             }
-            if (event.key === 'Backspace') {
-              handleRemoveSendEmailPoint({
-                index,
-                sendEmailPoints,
-              });
-            }
           }}
           value={point}
         />

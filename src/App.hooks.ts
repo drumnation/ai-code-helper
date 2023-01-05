@@ -15,11 +15,9 @@ import {
   Fallacy,
   LoadingState,
 } from './App.types';
-import smartlookClient from 'smartlook-client';
 
 function useApp() {
   useEffect(() => {
-    smartlookClient.init('43bc84d9a8406exxxxxxxxxb5601f5bbf8d2ed');
     return () => {};
   }, []);
 
@@ -44,14 +42,59 @@ function useApp() {
   const [isSendEmail, updateIsSendEmail] = useState<boolean>(true);
 
   const handleUpdateIsSendEmail = () => {
+    localStorage.setItem('isSendEmail', JSON.stringify(!isSendEmail));
     updateIsSendEmail(!isSendEmail);
-    updateState(initialState);
-    updateSummary([]);
-    updateFallacies([]);
-    updateSendEmailPoints(['']);
   };
 
   const [sendEmailPoints, updateSendEmailPoints] = useState<string[]>(['']);
+
+  useEffect(() => {
+    // Retrieve the values from local storage when the component mounts
+    const storedSendEmailPoints = localStorage.getItem('sendEmailPoints');
+    const storedReplyToEmail = localStorage.getItem('replyToEmail');
+    const storedSender = localStorage.getItem('sender');
+    const storedReceiver = localStorage.getItem('receiver');
+    const storedIsSendEmail = localStorage.getItem('isSendEmail');
+    if (storedSendEmailPoints)
+      updateSendEmailPoints(JSON.parse(storedSendEmailPoints));
+    if (storedIsSendEmail) updateIsSendEmail(JSON.parse(storedIsSendEmail));
+    updateState({
+      ...state,
+      ...(storedReplyToEmail && { email: storedReplyToEmail }),
+      ...(storedSender && { sender: storedSender }),
+      ...(storedReceiver && { receiver: storedReceiver }),
+    });
+  }, []);
+
+  const handleClearSendEmailPoints = () => {
+    localStorage.removeItem('sendEmailPoints');
+    localStorage.removeItem('sender');
+    localStorage.removeItem('receiver');
+    updateSendEmailPoints(['']);
+    updateState({ ...state, sender: '', receiver: '' });
+  };
+
+  const handleClearReplyToEmail = () => {
+    localStorage.removeItem('replyToEmail');
+    localStorage.removeItem('sender');
+    localStorage.removeItem('receiver');
+    updateState({ ...state, email: '', sender: '', receiver: '' });
+  };
+
+  const handleChangeSender = (event) => {
+    localStorage.setItem('sender', event.target.value);
+    updateState({ ...state, sender: event.target.value });
+  };
+
+  const handleChangeReceiver = (event) => {
+    localStorage.setItem('receiver', event.target.value);
+    updateState({ ...state, receiver: event.target.value });
+  };
+
+  const handleChangeReplyToEmail = (event) => {
+    localStorage.setItem('replyToEmail', event.target.value);
+    updateState({ ...state, email: event.target.value });
+  };
 
   const handleUpdateSendEmailPoints = ({ newPoint, index }) => {
     const newSendEmailPoints = sendEmailPoints.map((record: '', i) => {
@@ -61,6 +104,7 @@ function useApp() {
         return record;
       }
     });
+    localStorage.setItem('sendEmailPoints', JSON.stringify(newSendEmailPoints));
     updateSendEmailPoints(newSendEmailPoints);
   };
 
@@ -243,32 +287,40 @@ function useApp() {
     [loading],
   );
 
+  const [isFirm, setIsFirmOn] = useState(true);
+
+  const handleToggleFirm = () => {
+    setIsFirmOn((isFirm) => !isFirm);
+  };
+
   const generateRootPrompt = useCallback(async () => {
     if ((!isSendEmail && state.email !== '') || isSendEmail) {
       handleLoading({ type: 'rootPrompt', value: true });
       const data = await getRootPrompt({
-        state,
-        summary,
+        enableWordCount,
         fallacies,
         includeFallacyFinder,
         includeSummaryResponses,
-        enableWordCount,
-        promptWordCount,
+        isFirm,
         isSendEmail,
+        promptWordCount,
         sendEmailPoints,
+        state,
+        summary,
       });
       setRootPrompt(data.rootPrompt);
       handleLoading({ type: 'rootPrompt', value: false });
     }
   }, [
-    sendEmailPoints,
-    isSendEmail,
     enableWordCount,
     fallacies,
     handleLoading,
     includeFallacyFinder,
     includeSummaryResponses,
+    isFirm,
+    isSendEmail,
     promptWordCount,
+    sendEmailPoints,
     state,
     summary,
   ]);
@@ -277,16 +329,17 @@ function useApp() {
     generateRootPrompt();
     return () => {};
   }, [
+    enableWordCount,
     includeFallacyFinder,
     includeSummaryResponses,
-    promptWordCount,
-    enableWordCount,
-    state.summary,
-    state.sender,
-    state.receiver,
-    state.email,
+    isFirm,
     isSendEmail,
+    promptWordCount,
     sendEmailPoints,
+    state.email,
+    state.receiver,
+    state.sender,
+    state.summary,
   ]);
 
   const generateDebatePrompt = async () => {
@@ -312,24 +365,31 @@ function useApp() {
     generateFallacies,
     generateRootPrompt,
     generateSummary,
+    handleAddNewSendEmailPoint,
     handleChangeWordCount,
+    handleClearSendEmailPoints,
     handleCopy,
     handleFallacyFinderChange,
+    handleRemoveSendEmailPoint,
     handleSummaryResponsesChange,
+    handleToggleFirm,
     handleToggleWordCount,
     handleUpdateIsSendEmail,
-    handleAddNewSendEmailPoint,
-    handleRemoveSendEmailPoint,
+    handleUpdateSendEmailPoints,
+    handleClearReplyToEmail,
+    handleChangeSender,
+    handleChangeReceiver,
+    handleChangeReplyToEmail,
     includeFallacyFinder,
     includeSummaryResponses,
+    isFirm,
     isSendEmail,
     loading,
     promptWordCount,
     rootPrompt,
+    sendEmailPoints,
     setRootPrompt,
     state,
-    sendEmailPoints,
-    handleUpdateSendEmailPoints,
     summary,
     updateState,
     updateSummaryRecord,

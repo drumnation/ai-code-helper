@@ -1,11 +1,12 @@
 import './App.css';
 
 import {
+  ClearOutlined,
   CopyOutlined,
   MailOutlined,
-  ClearOutlined,
   PlayCircleOutlined,
   UnorderedListOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 import {
   Alert,
@@ -16,12 +17,13 @@ import {
   Input,
   Slider,
   Space,
+  Switch,
   Table,
 } from 'antd';
 import FormItem from 'antd/es/form/FormItem';
 import useApp from './App.hooks';
 import { fallacyColumns, wordCount } from './App.logic';
-import { SummaryTable, NewEmailPoint } from './components';
+import { NewEmailPoint, SummaryTable } from './components';
 
 function App() {
   const {
@@ -32,22 +34,29 @@ function App() {
     generateFallacies,
     generateRootPrompt,
     generateSummary,
+    handleAddNewSendEmailPoint,
     handleChangeWordCount,
+    handleClearSendEmailPoints,
     handleCopy,
     handleFallacyFinderChange,
+    handleRemoveSendEmailPoint,
     handleSummaryResponsesChange,
+    handleToggleFirm,
     handleToggleWordCount,
     handleUpdateIsSendEmail,
-    handleRemoveSendEmailPoint,
-    sendEmailPoints,
     handleUpdateSendEmailPoints,
-    handleAddNewSendEmailPoint,
-    isSendEmail,
+    handleClearReplyToEmail,
+    handleChangeSender,
+    handleChangeReceiver,
+    handleChangeReplyToEmail,
     includeFallacyFinder,
     includeSummaryResponses,
+    isFirm,
+    isSendEmail,
     loading,
     promptWordCount,
     rootPrompt,
+    sendEmailPoints,
     setRootPrompt,
     state,
     summary,
@@ -80,22 +89,29 @@ function App() {
             title='New Email'
             style={{ width: '100%' }}
             extra={
-              <Button
-                style={{ marginBottom: 10, marginTop: 10 }}
-                type='primary'
-                onClick={handleUpdateIsSendEmail}
-              >
-                Reply to an Email <MailOutlined />
-              </Button>
+              <Button.Group>
+                <Button
+                  style={{ marginTop: 10, background: 'red' }}
+                  type='primary'
+                  onClick={handleClearSendEmailPoints}
+                >
+                  Clear <DeleteOutlined />
+                </Button>
+                <Button
+                  style={{ marginBottom: 10, marginTop: 10 }}
+                  type='primary'
+                  onClick={handleUpdateIsSendEmail}
+                >
+                  Reply to an Email <MailOutlined />
+                </Button>
+              </Button.Group>
             }
           >
             <FormItem label='Sender' style={{ marginBottom: 5 }}>
               <Input
                 style={{ marginLeft: 15, width: 200 }}
                 placeholder='Sender Name Here'
-                onChange={(event) =>
-                  updateState({ ...state, sender: event.target.value })
-                }
+                onChange={handleChangeSender}
                 value={state.sender}
               />
             </FormItem>
@@ -106,9 +122,7 @@ function App() {
               <Input
                 placeholder='Receiver Name Here'
                 style={{ marginLeft: 5, width: 200 }}
-                onChange={(event) =>
-                  updateState({ ...state, receiver: event.target.value })
-                }
+                onChange={handleChangeReceiver}
                 value={state.receiver}
               />
             </FormItem>
@@ -127,22 +141,29 @@ function App() {
             title='Reply'
             style={{ width: '100%' }}
             extra={
-              <Button
-                style={{ marginBottom: 10, marginTop: 10 }}
-                type='primary'
-                onClick={handleUpdateIsSendEmail}
-              >
-                Compose a New Email <MailOutlined />
-              </Button>
+              <Button.Group>
+                <Button
+                  style={{ marginTop: 10, background: 'red' }}
+                  type='primary'
+                  onClick={handleClearReplyToEmail}
+                >
+                  Clear <DeleteOutlined />
+                </Button>
+                <Button
+                  style={{ marginBottom: 10, marginTop: 10 }}
+                  type='primary'
+                  onClick={handleUpdateIsSendEmail}
+                >
+                  Compose a New Email <MailOutlined />
+                </Button>
+              </Button.Group>
             }
           >
             <FormItem label='Sender' style={{ marginBottom: 5 }}>
               <Input
                 style={{ marginLeft: 15, width: 200 }}
                 placeholder='Sender Name Here'
-                onChange={(event) =>
-                  updateState({ ...state, sender: event.target.value })
-                }
+                onChange={handleChangeSender}
                 value={state.sender}
               />
             </FormItem>
@@ -153,9 +174,7 @@ function App() {
               <Input
                 placeholder='Receiver Name Here'
                 style={{ marginLeft: 5, width: 200 }}
-                onChange={(event) =>
-                  updateState({ ...state, receiver: event.target.value })
-                }
+                onChange={handleChangeReceiver}
                 value={state.receiver}
               />
             </FormItem>
@@ -163,9 +182,7 @@ function App() {
             <Input.TextArea
               autoSize
               placeholder='Paste email here'
-              onChange={(event) =>
-                updateState({ ...state, email: event.target.value })
-              }
+              onChange={handleChangeReplyToEmail}
               value={state.email}
             />
             <Button.Group>
@@ -175,7 +192,7 @@ function App() {
                   marginTop: 30,
                   width: 160,
                 }}
-                type='default'
+                type='primary'
                 onClick={generateFallacies}
                 loading={loading.fallacies}
               >
@@ -183,7 +200,7 @@ function App() {
               </Button>
               <Button
                 style={{ marginBottom: 10, marginTop: 30, width: 160 }}
-                type='default'
+                type='primary'
                 onClick={generateSummary}
                 loading={loading.summary}
               >
@@ -233,31 +250,40 @@ function App() {
           {summary.length > 0 && (
             <SummaryTable data={summary} updateRecord={updateSummaryRecord} />
           )}
+          <Form.Item
+            style={{
+              marginLeft: 16,
+              marginTop: 16,
+              marginBottom: -10,
+            }}
+            label='Tone'
+          >
+            <Switch
+              style={{ marginLeft: 5 }}
+              checked={isFirm}
+              onChange={handleToggleFirm}
+              checkedChildren={<div>Firm</div>}
+              unCheckedChildren={<div>Apologetic</div>}
+            />
+          </Form.Item>
           <div style={{ padding: 16 }}>
-            <Checkbox
-              checked={enableWordCount}
-              onChange={handleToggleWordCount}
-              style={{
-                marginBottom: 15,
-                marginTop:
-                  (fallacies.length > 0 && !isSendEmail) || summary.length > 0
-                    ? 15
-                    : 0,
-              }}
-            >
-              Enable Word Count
-            </Checkbox>
             <Form.Item label='Word Count'>
-              <Slider
-                disabled={!enableWordCount}
-                min={10}
-                max={1000}
-                step={1}
-                tooltip={{ open: enableWordCount }}
-                value={promptWordCount}
-                onChange={handleChangeWordCount}
+              <Switch
+                style={{ marginLeft: 5 }}
+                checked={enableWordCount}
+                onChange={handleToggleWordCount}
               />
             </Form.Item>
+            <Slider
+              style={{ marginTop: -15 }}
+              disabled={!enableWordCount}
+              min={10}
+              max={1000}
+              step={1}
+              tooltip={{ open: enableWordCount }}
+              value={promptWordCount}
+              onChange={handleChangeWordCount}
+            />
             {!isSendEmail && (
               <>
                 <Checkbox
@@ -301,7 +327,7 @@ function App() {
             align='left'
             title={`Response Email${
               state.emailResponse !== ''
-                ? ' (' + wordCount(state.emailResponse) + 'words)'
+                ? ' (' + wordCount(state.emailResponse) + ' words)'
                 : ''
             }`}
             bodyStyle={{ padding: 0 }}
