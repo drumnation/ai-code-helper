@@ -1,7 +1,7 @@
 import { callChatGPT, parseFallacies, transform } from './App.logic';
 import { State } from './App.types';
 import { fixJSONError } from './App.logic';
-
+import smartlookClient from 'smartlook-client';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function getFallacies({ state, isSendEmail }): Promise<State> {
@@ -9,6 +9,10 @@ export async function getFallacies({ state, isSendEmail }): Promise<State> {
 
   const fallacyFinderPrompt = `Here is the email for context:${newOrReplyEmail}"\nI want you to act as a fallacy finder. You will be on the lookout for invalid arguments so you can call out any logical errors or inconsistencies that may be present in statements and discourse in this email. Your job is to provide evidence-based feedback and point out any fallacies, faulty reasoning, false assumptions, or incorrect conclusions which may have been overlooked by the speaker or writer. \nFormat as an array of objects. Add a key called explanation that explains what the fallacy means, a fallacy key that labels the fallacy, and an evidence key that provides the sentence being labeled.\n\nConvert to  stringified JSON.`;
   const fallacies_ = await callChatGPT(fallacyFinderPrompt);
+  smartlookClient.track('fallacy finder', {
+    prompt: fallacyFinderPrompt,
+    response: fallacies_,
+  });
   const fallacies = fixJSONError(fallacies_.trimStart())?.map((argument) => ({
     ...argument,
     key: uuidv4(),
@@ -31,7 +35,10 @@ export async function getFallacies({ state, isSendEmail }): Promise<State> {
 export async function getSummary({ state }): Promise<State> {
   const summaryPrompt = `${state.email}\nCreate a summary of ${state.sender}'s arguments in this email provided for context.\n Format as a string with each summary bullet separated by a semi-colon.`;
   const summary_ = await callChatGPT(summaryPrompt);
-
+  smartlookClient.track('summarizer', {
+    prompt: summaryPrompt,
+    response: summary_,
+  });
   const summary = summary_.split('; ').map((summaryPoint) => ({
     action: 'ignore',
     explain: '',
@@ -110,6 +117,10 @@ export async function getRootPrompt({
 
 export async function getResponseEmail({ state, rootPrompt }): Promise<State> {
   const emailResponse = await callChatGPT(rootPrompt);
+  smartlookClient.track('summarizer', {
+    prompt: rootPrompt,
+    response: emailResponse,
+  });
   console.debug('emailResponse', emailResponse);
   return {
     sender: state.sender,

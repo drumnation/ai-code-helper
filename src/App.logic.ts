@@ -16,7 +16,6 @@ export async function callChatGPT(prompt: string): Promise<any> {
   });
   const text = completion.data.choices[0].text;
   console.debug('text', text);
-  console.debug('text', completion);
   return text;
 }
 

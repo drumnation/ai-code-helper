@@ -15,8 +15,14 @@ import {
   Fallacy,
   LoadingState,
 } from './App.types';
+import smartlookClient from 'smartlook-client';
 
 function useApp() {
+  useEffect(() => {
+    smartlookClient.init('43bc84d9a8406exxxxxxxxxb5601f5bbf8d2ed');
+    return () => {};
+  }, []);
+
   const initialState: State = {
     sender: '',
     receiver: '',
