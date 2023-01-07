@@ -1,10 +1,11 @@
+import { Tag } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 
 import {
-  getDebatePrompt,
   getFallacies,
   getResponseEmail,
   getRootPrompt,
+  getSentenceSuggestions,
   getSummary,
 } from './App.prompts';
 import {
@@ -39,11 +40,78 @@ function useApp() {
 
   const [summary, updateSummary] = useState<Summary[]>([]);
 
+  const [temperature, updateTemperature] = useState<number>(0.6);
+
+  const handleChangeTemperature = (temp) => {
+    updateTemperature(temp);
+  };
+
   const [isSendEmail, updateIsSendEmail] = useState<boolean>(true);
 
   const handleUpdateIsSendEmail = () => {
     localStorage.setItem('isSendEmail', JSON.stringify(!isSendEmail));
     updateIsSendEmail(!isSendEmail);
+  };
+
+  const [sentenceSuggestions, updateSentenceSuggestions] = useState({});
+
+  const [sentenceSuggestionsLoading, updateSentenceSuggestionsLoading] =
+    useState<{ [key: number]: boolean }>({ 0: false });
+
+  const handleUpdateSentenceSuggestionsLoading = ({
+    index,
+    isRemove = false,
+    isLoading = false,
+    isLast = false,
+    sentenceSuggestionsLoading: sentenceSuggestionsLoading_,
+  }) => {
+    let newLoading = {
+      ...sentenceSuggestionsLoading_,
+      [index]: isLoading,
+    };
+    isRemove && delete newLoading[index];
+    if (isLast) newLoading = { 0: false };
+    updateSentenceSuggestionsLoading(newLoading);
+  };
+
+  const handleClickSentenceSuggestions = async ({
+    index,
+    sentenceSuggestionsLoading: sentenceSuggestionsLoading_,
+  }: {
+    index: number;
+    sentenceSuggestionsLoading: { [key: number]: boolean };
+  }) => {
+    handleUpdateSentenceSuggestionsLoading({
+      index,
+      isLoading: true,
+      sentenceSuggestionsLoading: sentenceSuggestionsLoading_,
+    });
+    const sentenceSuggestions_ = await getSentenceSuggestions({
+      sendEmailPoints,
+      index,
+      sentenceSuggestions,
+      temperature,
+    });
+    updateSentenceSuggestions(sentenceSuggestions_);
+    handleUpdateSentenceSuggestionsLoading({
+      index,
+      sentenceSuggestionsLoading: sentenceSuggestionsLoading_,
+    });
+  };
+
+  const [selectedSentence, updateSelectedSentence] = useState({});
+
+  const handleSentenceSelect = ({
+    i,
+    key,
+    selectedSentence: selectedSentence_,
+  }) => {
+    const newSelectedSentence = {
+      ...selectedSentence_,
+      [i]: selectedSentence_[i] === key ? '' : key,
+    };
+    console.debug('newObject', newSelectedSentence);
+    updateSelectedSentence(newSelectedSentence);
   };
 
   const [sendEmailPoints, updateSendEmailPoints] = useState<string[]>(['']);
@@ -111,19 +179,36 @@ function useApp() {
   const handleAddNewSendEmailPoint = ({
     index,
     sendEmailPoints: sendEmailPoints_,
+    sentenceSuggestionsLoading: sentenceSuggestionsLoading_,
   }) => {
     sendEmailPoints_.splice(index + 1, 0, '');
+
+    handleUpdateSentenceSuggestionsLoading({
+      index,
+      sentenceSuggestionsLoading: sentenceSuggestionsLoading_,
+    });
     updateSendEmailPoints([...sendEmailPoints_]);
   };
 
   const handleRemoveSendEmailPoint = ({
     index,
     sendEmailPoints: sendEmailPoints_,
+    sentenceSuggestionsLoading: sentenceSuggestionsLoading_,
   }) => {
     if (sendEmailPoints_.length !== 1) {
       sendEmailPoints_.splice(index, 1);
+      handleUpdateSentenceSuggestionsLoading({
+        index,
+        isRemove: true,
+        sentenceSuggestionsLoading: sentenceSuggestionsLoading_,
+      });
       updateSendEmailPoints([...sendEmailPoints_]);
     } else {
+      handleUpdateSentenceSuggestionsLoading({
+        index,
+        isLast: true,
+        sentenceSuggestionsLoading: sentenceSuggestionsLoading_,
+      });
       updateSendEmailPoints(['']);
     }
   };
@@ -154,6 +239,114 @@ function useApp() {
     rootPrompt: false,
     emailResponse: false,
   });
+
+  const [writingStyle, updateWritingStyle] = useState('No Style Change');
+  const handleWritingStyleRephrase = (style) => {
+    updateWritingStyle(style);
+  };
+
+  const [descriptors, updateDescriptors] = useState([
+    'Brief',
+    'Informative',
+    'Firm',
+    'Friendly',
+  ]);
+
+  const handleDescriptorRephrase = (descriptors) => {
+    console.log('descriptors', descriptors);
+
+    updateDescriptors(descriptors);
+  };
+
+  const [languageLevelCategory, updateLanguageLevelCategory] =
+    useState('Ignore Complexity');
+  const [languageLevelSubChoices, updateLanguageLevelSubChoice] = useState([]);
+
+  const handleLanguageLevelCategorySelect = (choice) => {
+    updateLanguageLevelCategory(choice);
+  };
+  const handleLanguageLevelSubChoiceSelect = (choice) => {
+    updateLanguageLevelSubChoice(choice);
+  };
+
+  const [draftEmailVersions, updateDraftEmailVersions] = useState([]);
+
+  const descriptorColors = {
+    Brief: '#FF7F50',
+    Clear: '#ADD8E6',
+    Compelling: '#FF69B4',
+    Concise: '#00FFFF',
+    Convincing: '#800080',
+    Descriptive: '#D2691E',
+    Detailed: '#00FF7F',
+    Dynamic: '#FFA500',
+    Elaborate: '#FFD700',
+    Engaging: '#FFFF00',
+    Evocative: '#00FF00',
+    Expressive: '#00FF7F',
+    Forceful: '#0000FF',
+    Firm: '#9400D3',
+    Friendly: '#077007',
+    Informative: '#00008B',
+    Passionate: '#FF69B4',
+    Persuasive: '#FFA500',
+    Poetic: '#800080',
+    Powerful: '#FF69B4',
+    Precise: '#0000FF',
+    Succinct: '#FFFF00',
+    Vivid: '#FFC0CB',
+  };
+
+  const handleAddNewDraftEmail = () => {
+    const count = draftEmailVersions.length + 1;
+    const created = Date.now();
+    const responses = [
+      ...draftEmailVersions,
+      {
+        email: state.emailResponse,
+        title: `Draft ${count}`,
+        wordCount: promptWordCount,
+        enableWordCount,
+        isFirm,
+        tone: (
+          <>
+            {descriptors.map((tone) => {
+              return (
+                <Tag
+                  style={{ fontWeight: 'bold' }}
+                  color={descriptorColors[tone]}
+                >
+                  {tone}
+                </Tag>
+              );
+            })}
+          </>
+        ),
+        languageLevelCategory: languageLevelCategory !==
+          'Ignore Complexity' && (
+          <Tag style={{ fontWeight: 'bold' }} color='gray'>
+            {languageLevelCategory}
+          </Tag>
+        ),
+        languageLevelSubChoices: (
+          <>
+            {languageLevelSubChoices.map((subChoice) => {
+              return (
+                <Tag key={subChoice} style={{ fontWeight: 'bold' }}>
+                  {subChoice}
+                </Tag>
+              );
+            })}
+          </>
+        ),
+        description: (
+          <Tag color='default'>{writingStyle.replace(/\s*\(.*?\)/, '')}</Tag>
+        ),
+        created,
+      },
+    ];
+    updateDraftEmailVersions(responses);
+  };
 
   const handleChangeWordCount = (count: number) => {
     setPromptWordCount(count);
@@ -297,21 +490,28 @@ function useApp() {
     if ((!isSendEmail && state.email !== '') || isSendEmail) {
       handleLoading({ type: 'rootPrompt', value: true });
       const data = await getRootPrompt({
+        descriptors,
         enableWordCount,
         fallacies,
         includeFallacyFinder,
         includeSummaryResponses,
         isFirm,
         isSendEmail,
+        languageLevelCategory,
+        languageLevelSubChoices,
         promptWordCount,
+        selectedSentence,
         sendEmailPoints,
+        sentenceSuggestions,
         state,
         summary,
+        writingStyle,
       });
       setRootPrompt(data.rootPrompt);
       handleLoading({ type: 'rootPrompt', value: false });
     }
   }, [
+    descriptors,
     enableWordCount,
     fallacies,
     handleLoading,
@@ -319,81 +519,110 @@ function useApp() {
     includeSummaryResponses,
     isFirm,
     isSendEmail,
+    isSendEmail,
+    languageLevelCategory,
+    languageLevelSubChoices,
     promptWordCount,
+    selectedSentence,
     sendEmailPoints,
+    sentenceSuggestions,
     state,
     summary,
+    writingStyle,
   ]);
 
   useEffect(() => {
     generateRootPrompt();
     return () => {};
   }, [
+    descriptors,
     enableWordCount,
     includeFallacyFinder,
     includeSummaryResponses,
     isFirm,
     isSendEmail,
+    isSendEmail,
+    languageLevelCategory,
+    languageLevelSubChoices,
     promptWordCount,
+    selectedSentence,
     sendEmailPoints,
+    sentenceSuggestions,
     state.email,
     state.receiver,
     state.sender,
     state.summary,
+    writingStyle,
   ]);
-
-  const generateDebatePrompt = async () => {
-    handleLoading({ type: 'debatePrompt', value: true });
-    const data = await getDebatePrompt({ state });
-    updateState(data);
-    handleLoading({ type: 'debatePrompt', value: false });
-  };
 
   const generateEmailResponse = async () => {
     handleLoading({ type: 'emailResponse', value: true });
-    const data = await getResponseEmail({ state, rootPrompt });
+    const data = await getResponseEmail({ state, rootPrompt, temperature });
     updateState(data);
     handleLoading({ type: 'emailResponse', value: false });
   };
 
   return {
+    descriptors,
+    draftEmailVersions,
     enableWordCount,
     error,
     fallacies,
-    generateDebatePrompt,
     generateEmailResponse,
     generateFallacies,
     generateRootPrompt,
     generateSummary,
+    handleAddNewDraftEmail,
     handleAddNewSendEmailPoint,
+    handleChangeReceiver,
+    handleChangeReplyToEmail,
+    handleChangeSender,
+    handleChangeTemperature,
     handleChangeWordCount,
+    handleClearReplyToEmail,
     handleClearSendEmailPoints,
+    handleClickSentenceSuggestions,
     handleCopy,
+    handleDescriptorRephrase,
     handleFallacyFinderChange,
+    handleLanguageLevelCategorySelect,
+    handleLanguageLevelSubChoiceSelect,
     handleRemoveSendEmailPoint,
+    handleSentenceSelect,
     handleSummaryResponsesChange,
     handleToggleFirm,
     handleToggleWordCount,
     handleUpdateIsSendEmail,
     handleUpdateSendEmailPoints,
-    handleClearReplyToEmail,
-    handleChangeSender,
-    handleChangeReceiver,
-    handleChangeReplyToEmail,
+    handleWritingStyleRephrase,
     includeFallacyFinder,
     includeSummaryResponses,
     isFirm,
     isSendEmail,
+    languageLevelCategory,
+    languageLevelSubChoices,
     loading,
     promptWordCount,
     rootPrompt,
+    selectedSentence,
     sendEmailPoints,
+    sentenceSuggestions,
+    sentenceSuggestionsLoading,
     setRootPrompt,
     state,
     summary,
+    temperature,
     updateState,
     updateSummaryRecord,
+    writingStyle,
   };
 }
 
 export default useApp;
+
+// const generateDebatePrompt = async () => {
+//   handleLoading({ type: 'debatePrompt', value: true });
+//   const data = await getDebatePrompt({ state });
+//   updateState(data);
+//   handleLoading({ type: 'debatePrompt', value: false });
+// };

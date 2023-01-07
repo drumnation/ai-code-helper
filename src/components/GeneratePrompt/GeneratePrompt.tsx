@@ -18,11 +18,17 @@ import {
 import { PlayCircleOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { Alert, Space } from 'antd';
 
-import { SummaryTable } from '..';
+import {
+  DescriptorsSelect,
+  LanguageLevelSelect,
+  SummaryTable,
+  WritingStyleSelect,
+} from '..';
 
 const { Panel } = Collapse;
 
 const GeneratePrompt = ({
+  descriptors,
   enableWordCount,
   error,
   fallacies,
@@ -31,29 +37,38 @@ const GeneratePrompt = ({
   generateFallacies,
   generateRootPrompt,
   generateSummary,
+  handleChangeTemperature,
   handleChangeWordCount,
+  handleDescriptorRephrase,
   handleFallacyFinderChange,
+  handleLanguageLevelCategorySelect,
+  handleLanguageLevelSubChoiceSelect,
   handleSummaryResponsesChange,
   handleToggleFirm,
   handleToggleWordCount,
+  handleWritingStyleRephrase,
   includeFallacyFinder,
   includeSummaryResponses,
   isFirm,
   isSendEmail,
+  languageLevelCategory,
+  languageLevelSubChoices,
   loading,
   promptWordCount,
   rootPrompt,
   setRootPrompt,
-  summary,
   state,
+  summary,
+  temperature,
   updateSummaryRecord,
+  writingStyle,
 }) => {
   return (
     <Collapse
       style={{
         width: '100%',
         marginTop: 30,
-        marginBottom: 10,
+        marginBottom: 20,
         background: '#fff',
       }}
       defaultActiveKey={['1']}
@@ -86,47 +101,52 @@ const GeneratePrompt = ({
           </Button>
         }
       >
-        <Card
-          title='Fine Tuning and Analysis Tools'
-          style={{ marginBottom: 10 }}
-        >
-          <Button
-            style={{ width: 160, background: 'green' }}
-            type='primary'
-            onClick={generateFallacies}
-            loading={loading.fallacies}
+        {!isSendEmail && (
+          <Card
+            title='Fine Tuning and Analysis Tools'
+            style={{ marginBottom: 10 }}
           >
-            Fallacy Finder {!loading.fallacies && <PlayCircleOutlined />}
-          </Button>
-          <Button
-            style={{ width: 160, marginLeft: 10, background: 'green' }}
-            type='primary'
-            onClick={generateSummary}
-            loading={loading.summary}
-          >
-            Summarizer {!loading.summary && <UnorderedListOutlined />}
-          </Button>
-          {error !== '' && (
-            <Space direction='vertical' style={{ width: '100%' }}>
-              <Alert
-                message='Error! Please try again.'
-                description={error}
-                type='error'
-              />
-            </Space>
-          )}
-          <ul style={{ marginBottom: 0, marginLeft: 0, paddingLeft: 10 }}>
-            <li>
-              Use the <b>Fallacy Finder</b> to discover unfair or illogical
-              arguments in {state.sender !== '' ? state.sender : 'SENDER'}'s
-              email.
-            </li>
-            <li>
-              Use the <b>Summarizer</b> to provide accurate feedback about each
-              point {state.sender !== '' ? state.sender : 'SENDER'} has made.
-            </li>
-          </ul>
-        </Card>
+            <Button.Group>
+              <Button
+                style={{ width: 145, background: 'green' }}
+                type='primary'
+                onClick={generateFallacies}
+                loading={loading.fallacies}
+              >
+                Fallacy Finder {!loading.fallacies && <PlayCircleOutlined />}
+              </Button>
+              <Button
+                style={{ width: 145, background: 'green' }}
+                type='primary'
+                onClick={generateSummary}
+                loading={loading.summary}
+              >
+                Summarizer {!loading.summary && <UnorderedListOutlined />}
+              </Button>
+            </Button.Group>
+            {error !== '' && (
+              <Space direction='vertical' style={{ width: '100%' }}>
+                <Alert
+                  message='Error! Please try again.'
+                  description={error}
+                  type='error'
+                />
+              </Space>
+            )}
+            <ul style={{ marginBottom: 0, marginLeft: 0, paddingLeft: 10 }}>
+              <li>
+                Use the <b>Fallacy Finder</b> to discover unfair or illogical
+                arguments in {state.sender !== '' ? state.sender : 'SENDER'}'s
+                email.
+              </li>
+              <li>
+                Use the <b>Summarizer</b> to provide accurate feedback about
+                each point {state.sender !== '' ? state.sender : 'SENDER'} has
+                made.
+              </li>
+            </ul>
+          </Card>
+        )}
         {fallacies.length > 0 && !isSendEmail && (
           <Table
             style={{
@@ -137,26 +157,72 @@ const GeneratePrompt = ({
             columns={fallacyColumns}
           />
         )}
-        <div style={{ height: 16 }} />
+        {!isSendEmail && <div style={{ height: 16 }} />}
         {summary.length > 0 && (
           <SummaryTable data={summary} updateRecord={updateSummaryRecord} />
+        )}
+        <h5 style={{ marginLeft: 16, marginTop: 0, marginBottom: 16 }}>
+          For Best Results Choose 1: Tone, Language Complexity, or Writing
+          Style.
+        </h5>
+        {!isSendEmail && (
+          <Switch
+            style={{
+              marginLeft: 16,
+              marginBottom: 16,
+            }}
+            checked={isFirm}
+            onChange={handleToggleFirm}
+            checkedChildren={<div>Unapologetic</div>}
+            unCheckedChildren={<div>Apologetic</div>}
+          />
         )}
         <Form.Item
           style={{
             marginLeft: 16,
-            marginTop: 16,
-            marginBottom: -10,
+            marginRight: 31,
+            marginTop: isSendEmail ? 0 : 16,
+            marginBottom: 16,
           }}
           label='Tone'
         >
-          <Switch
-            style={{
-              marginLeft: 5,
-            }}
-            checked={isFirm}
-            onChange={handleToggleFirm}
-            checkedChildren={<div>Firm</div>}
-            unCheckedChildren={<div>Apologetic</div>}
+          <DescriptorsSelect
+            descriptors={descriptors}
+            handleDescriptorRephrase={handleDescriptorRephrase}
+          />
+        </Form.Item>
+        <Form.Item
+          style={{
+            marginLeft: 16,
+            marginRight: 31,
+            marginTop: isSendEmail ? 0 : 16,
+            marginBottom: 16,
+          }}
+          label='Language Complexity'
+        >
+          <LanguageLevelSelect
+            handleLanguageLevelCategorySelect={
+              handleLanguageLevelCategorySelect
+            }
+            handleLanguageLevelSubChoiceSelect={
+              handleLanguageLevelSubChoiceSelect
+            }
+            languageLevelCategory={languageLevelCategory}
+            languageLevelSubChoices={languageLevelSubChoices}
+          />
+        </Form.Item>
+        <Form.Item
+          style={{
+            marginLeft: 16,
+            marginRight: 25,
+            marginTop: isSendEmail ? 0 : 16,
+            marginBottom: 8,
+          }}
+          label='Writing Style'
+        >
+          <WritingStyleSelect
+            writingStyle={writingStyle}
+            handleWritingStyleRephrase={handleWritingStyleRephrase}
           />
         </Form.Item>
         <div
@@ -187,6 +253,18 @@ const GeneratePrompt = ({
             value={promptWordCount}
             onChange={handleChangeWordCount}
           />
+          <Form.Item
+            style={{ marginBottom: 16, marginTop: 16 }}
+            label='Generation Randomness'
+          >
+            <Slider
+              min={0}
+              max={1}
+              step={0.1}
+              value={temperature}
+              onChange={handleChangeTemperature}
+            />
+          </Form.Item>
           {!isSendEmail && (
             <>
               <Checkbox

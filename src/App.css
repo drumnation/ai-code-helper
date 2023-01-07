@@ -38,14 +38,21 @@
   color: white;
   height: 100%;
   justify-content: center;
-  margin-left: 8%;
-  margin-right: 8%;
+  margin-left: 20%;
+  margin-right: 20%;
+}
+
+.Panel {
+  margin-left: 20px;
 }
 
 @media (max-width: 600px) {
   .App-body {
     margin-left: 1%;
     margin-right: 1%;
+  }
+  .Panel {
+    display: none;
   }
 }
 
@@ -54,12 +61,8 @@
     margin-left: 20%;
     margin-right: 20%;
   }
-}
-
-@media (min-width: 901px) {
-  .App-body {
-    margin-left: 25%;
-    margin-right: 25%;
+  .Panel {
+    display: none;
   }
 }
 

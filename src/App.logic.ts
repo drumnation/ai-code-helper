@@ -7,11 +7,14 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-export async function callChatGPT(prompt: string): Promise<any> {
+export async function callChatGPT(
+  prompt: string,
+  temperature = 0.6,
+): Promise<any> {
   const completion = await openai.createCompletion({
     model: 'text-davinci-003',
     prompt,
-    temperature: 0.6,
+    temperature,
     max_tokens: 1000,
   });
   const text = completion.data.choices[0].text;
@@ -158,4 +161,43 @@ export function fixJSONError(jsonString) {
       throw error;
     }
   }
+}
+
+export function formatDate(timestamp) {
+  const date = new Date(timestamp);
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const month = months[date.getMonth()];
+  const day = date.getDate();
+  const year = date.getFullYear();
+  let hours: string | number = date.getHours();
+  let minutes: string | number = date.getMinutes();
+  let seconds: string | number = date.getSeconds();
+  let ampm = 'AM';
+  if (hours >= 12) {
+    ampm = 'PM';
+    hours -= 12;
+  }
+  if (hours === 0) {
+    hours = 12;
+  }
+  if (minutes < 10) {
+    minutes = `0${minutes}`;
+  }
+  if (seconds < 10) {
+    seconds = `0${seconds}`;
+  }
+  return `(${month} ${day}) ${hours}:${minutes} ${ampm}`;
 }

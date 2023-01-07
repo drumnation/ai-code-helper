@@ -5,16 +5,27 @@ import {
   DeleteOutlined,
   MailOutlined,
   PlayCircleOutlined,
-  UnorderedListOutlined,
 } from '@ant-design/icons';
-import { Alert, Button, Card, Input, Space, Table } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Collapse,
+  Input,
+  List,
+  Space,
+  Table,
+  Tag,
+} from 'antd';
 import FormItem from 'antd/es/form/FormItem';
 import useApp from './App.hooks';
-import { fallacyColumns, wordCount } from './App.logic';
+import { fallacyColumns, formatDate, wordCount } from './App.logic';
 import { GeneratePrompt, NewEmailPoint } from './components';
 
 function App() {
   const {
+    descriptors,
+    draftEmailVersions,
     enableWordCount,
     error,
     fallacies,
@@ -22,34 +33,49 @@ function App() {
     generateFallacies,
     generateRootPrompt,
     generateSummary,
+    handleAddNewDraftEmail,
     handleAddNewSendEmailPoint,
+    handleChangeReceiver,
+    handleChangeReplyToEmail,
+    handleChangeSender,
+    handleChangeTemperature,
     handleChangeWordCount,
+    handleClearReplyToEmail,
     handleClearSendEmailPoints,
+    handleClickSentenceSuggestions,
     handleCopy,
+    handleDescriptorRephrase,
     handleFallacyFinderChange,
+    handleLanguageLevelCategorySelect,
+    handleLanguageLevelSubChoiceSelect,
     handleRemoveSendEmailPoint,
+    handleSentenceSelect,
     handleSummaryResponsesChange,
     handleToggleFirm,
     handleToggleWordCount,
     handleUpdateIsSendEmail,
     handleUpdateSendEmailPoints,
-    handleClearReplyToEmail,
-    handleChangeSender,
-    handleChangeReceiver,
-    handleChangeReplyToEmail,
+    handleWritingStyleRephrase,
     includeFallacyFinder,
     includeSummaryResponses,
     isFirm,
     isSendEmail,
+    languageLevelCategory,
+    languageLevelSubChoices,
     loading,
     promptWordCount,
     rootPrompt,
+    selectedSentence,
     sendEmailPoints,
+    sentenceSuggestions,
+    sentenceSuggestionsLoading,
     setRootPrompt,
     state,
     summary,
+    temperature,
     updateState,
     updateSummaryRecord,
+    writingStyle,
   } = useApp();
 
   return (
@@ -107,10 +133,15 @@ function App() {
             </FormItem>
             <h4>What points should this email make?</h4>
             <NewEmailPoint
-              sendEmailPoints={sendEmailPoints}
-              handleUpdateSendEmailPoints={handleUpdateSendEmailPoints}
+              selectedSentence={selectedSentence}
+              handleSentenceSelect={handleSentenceSelect}
               handleAddNewSendEmailPoint={handleAddNewSendEmailPoint}
+              handleClickSentenceSuggestions={handleClickSentenceSuggestions}
               handleRemoveSendEmailPoint={handleRemoveSendEmailPoint}
+              handleUpdateSendEmailPoints={handleUpdateSendEmailPoints}
+              sentenceSuggestionsLoading={sentenceSuggestionsLoading}
+              sendEmailPoints={sendEmailPoints}
+              sentenceSuggestions={sentenceSuggestions}
             />
             <Button
               style={{ marginTop: 20, background: 'red' }}
@@ -173,6 +204,7 @@ function App() {
         )}
 
         <GeneratePrompt
+          descriptors={descriptors}
           enableWordCount={enableWordCount}
           error={error}
           fallacies={fallacies}
@@ -181,22 +213,33 @@ function App() {
           generateFallacies={generateFallacies}
           generateRootPrompt={generateRootPrompt}
           generateSummary={generateSummary}
+          handleChangeTemperature={handleChangeTemperature}
           handleChangeWordCount={handleChangeWordCount}
+          handleDescriptorRephrase={handleDescriptorRephrase}
           handleFallacyFinderChange={handleFallacyFinderChange}
+          handleLanguageLevelCategorySelect={handleLanguageLevelCategorySelect}
+          handleLanguageLevelSubChoiceSelect={
+            handleLanguageLevelSubChoiceSelect
+          }
           handleSummaryResponsesChange={handleSummaryResponsesChange}
           handleToggleFirm={handleToggleFirm}
           handleToggleWordCount={handleToggleWordCount}
+          handleWritingStyleRephrase={handleWritingStyleRephrase}
           includeFallacyFinder={includeFallacyFinder}
           includeSummaryResponses={includeSummaryResponses}
           isFirm={isFirm}
           isSendEmail={isSendEmail}
+          languageLevelCategory={languageLevelCategory}
+          languageLevelSubChoices={languageLevelSubChoices}
           loading={loading}
           promptWordCount={promptWordCount}
           rootPrompt={rootPrompt}
           setRootPrompt={setRootPrompt}
-          summary={summary}
           state={state}
+          summary={summary}
+          temperature={temperature}
           updateSummaryRecord={updateSummaryRecord}
+          writingStyle={writingStyle}
         />
 
         {state.emailResponse !== '' && (
@@ -213,9 +256,14 @@ function App() {
               style={{ width: '100%', marginBottom: 20, marginTop: 20 }}
               extra={
                 state.emailResponse !== '' && (
-                  <Button onClick={handleCopy}>
-                    <CopyOutlined /> Copy
-                  </Button>
+                  <Button.Group>
+                    <Button onClick={handleAddNewDraftEmail}>
+                      <CopyOutlined /> Save Draft
+                    </Button>
+                    <Button onClick={handleCopy}>
+                      <CopyOutlined /> Copy
+                    </Button>
+                  </Button.Group>
                 )
               }
             >
@@ -227,7 +275,63 @@ function App() {
                   columns={fallacyColumns}
                 />
               )}
+
               <div style={{ padding: 16 }}>
+                {draftEmailVersions.length > 0 && (
+                  <List
+                    style={{ marginBottom: 16 }}
+                    itemLayout='horizontal'
+                    dataSource={draftEmailVersions}
+                    renderItem={(item) => (
+                      <Collapse style={{ marginBottom: 5 }}>
+                        <Collapse.Panel
+                          key={item.title}
+                          header={
+                            <div
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                              }}
+                            >
+                              <b>{item.title}</b>
+                              <div className='Panel'>
+                                {item.languageLevelCategory}
+                                {item.languageLevelSubChoices}
+                                {item.description}
+
+                                {item.isFirm ? (
+                                  <Tag color='#2e75ab'>Unapologetic</Tag>
+                                ) : (
+                                  <Tag color='#cf1e8b'>Apologetic</Tag>
+                                )}
+                                {item.enableWordCount ? (
+                                  <Tag color='#000000'>
+                                    {item.wordCount} words
+                                  </Tag>
+                                ) : (
+                                  ''
+                                )}
+                                {item.tone}
+                              </div>
+                              <Tag color='#000000'>
+                                {formatDate(item.created)}
+                              </Tag>
+                            </div>
+                          }
+                        >
+                          <pre
+                            style={{
+                              whiteSpace: 'pre-wrap',
+                              textAlign: 'left',
+                            }}
+                          >
+                            {item.email}
+                          </pre>
+                        </Collapse.Panel>
+                      </Collapse>
+                    )}
+                  />
+                )}
                 <Input.TextArea
                   disabled={state.emailResponse === ''}
                   style={{ height: '100%' }}
