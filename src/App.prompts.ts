@@ -5,59 +5,66 @@ import smartlookClient from 'smartlook-client';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function getFallacies({ state, isSendEmail }): Promise<State> {
-  const newOrReplyEmail = isSendEmail ? state.emailResponse : state.email;
-
-  const fallacyFinderPrompt = `Here is the email for context:${newOrReplyEmail}"\nI want you to act as a fallacy finder. You will be on the lookout for invalid arguments so you can call out any logical errors or inconsistencies that may be present in statements and discourse in this email. Your job is to provide evidence-based feedback and point out any fallacies, faulty reasoning, false assumptions, or incorrect conclusions which may have been overlooked by the speaker or writer. \nFormat as an array of objects. Add a key called explanation that explains what the fallacy means, a fallacy key that labels the fallacy, and an evidence key that provides the sentence being labeled.\n\nConvert to  stringified JSON.`;
+  const newOrReplyEmail = getNewOrReplyEmail(isSendEmail, state);
+  const fallacyFinderPrompt = getFallacyFinderPrompt(newOrReplyEmail);
   const fallacies_ = await callChatGPT(fallacyFinderPrompt);
+  trackFallacyFinder(fallacyFinderPrompt, fallacies_);
+  const fallacies = getFallaciesArray(fallacies_);
+
+  return {
+    ...state,
+    fallacies,
+  };
+}
+
+function getNewOrReplyEmail(isSendEmail, state) {
+  return isSendEmail ? state.emailResponse : state.email;
+}
+
+function getFallacyFinderPrompt(newOrReplyEmail) {
+  return `Here is the email for context:${newOrReplyEmail}"\nI want you to act as a fallacy finder. You will be on the lookout for invalid arguments so you can call out any logical errors or inconsistencies that may be present in statements and discourse in this email. Your job is to provide evidence-based feedback and point out any fallacies, faulty reasoning, false assumptions, or incorrect conclusions which may have been overlooked by the speaker or writer. \nFormat as an array of objects. Add a key called explanation that explains what the fallacy means, a fallacy key that labels the fallacy, and an evidence key that provides the sentence being labeled.\n\nConvert to  stringified JSON.`;
+}
+
+function trackFallacyFinder(fallacyFinderPrompt, fallacies_) {
   smartlookClient.track('fallacy finder', {
     prompt: fallacyFinderPrompt,
     response: fallacies_,
   });
-  const fallacies = fixJSONError(fallacies_.trimStart())?.map((argument) => ({
+}
+
+function getFallaciesArray(fallacies_) {
+  return fixJSONError(fallacies_.trimStart())?.map((argument) => ({
     ...argument,
     key: uuidv4(),
   }));
-
-  return {
-    sender: state.sender,
-    receiver: state.receiver,
-    thread: state.thread,
-    email: state.email,
-    emailResponse: state.emailResponse,
-    fallacies,
-    summary: state.summary,
-    oneSidedArgument: '',
-    rootPrompt: '',
-    combinedKnowledge: '',
-  };
 }
 
 export async function getSummary({ state }): Promise<State> {
   const summaryPrompt = `${state.email}\nCreate a summary of ${state.sender}'s arguments in this email provided for context.\n Format as a string with each summary bullet separated by a semi-colon.`;
   const summary_ = await callChatGPT(summaryPrompt);
+  trackSummary(summaryPrompt, summary_);
+  const summary = getSummaryArray(summary_);
+
+  return {
+    ...state,
+    summary,
+  };
+}
+
+function trackSummary(summaryPrompt, summary_) {
   smartlookClient.track('summarizer', {
     prompt: summaryPrompt,
     response: summary_,
   });
-  const summary = summary_.split('; ').map((summaryPoint) => ({
+}
+
+function getSummaryArray(summary_) {
+  return summary_.split('; ').map((summaryPoint) => ({
     action: 'ignore',
     explain: '',
     argument: summaryPoint.trimStart(),
     key: uuidv4(),
   }));
-
-  return {
-    sender: state.sender,
-    receiver: state.receiver,
-    thread: state.thread,
-    email: state.email,
-    emailResponse: state.emailResponse,
-    fallacies: state.fallacies,
-    summary,
-    oneSidedArgument: '',
-    rootPrompt: '',
-    combinedKnowledge: '',
-  };
 }
 
 export async function getSentenceSuggestions({
@@ -66,151 +73,208 @@ export async function getSentenceSuggestions({
   sentenceSuggestions: suggestions,
   temperature,
 }) {
-  const sentenceSuggestionsPrompt = `Write 5 different variations, rephrasing the following sentence in random professional styles, random language complexities, and random tone. Format as an array of strings.\n\n"${sendEmailPoints[index]}\n\nConvert to stringified json."`;
+  const sentenceSuggestionsPrompt = generateSentenceSuggestionsPrompt(
+    sendEmailPoints,
+    index,
+  );
   const sentenceSuggestions_ = await callChatGPT(
     sentenceSuggestionsPrompt,
     temperature,
   );
-  smartlookClient.track('sentenceSuggestions', {
-    prompt: sentenceSuggestionsPrompt,
-    response: sentenceSuggestions_,
-  });
-  const sentenceSuggestions = { ...suggestions };
-  sendEmailPoints.map((_, i) => {
-    if (i === index) {
-      JSON.parse(sentenceSuggestions_).map((suggestion_) => {
-        const key = uuidv4();
-        sentenceSuggestions[i] = {
-          ...sentenceSuggestions[i],
-          [key]: {
-            selelcted: false,
-            suggestion: suggestion_,
-            key,
-          },
-        };
-      });
-    } else {
-      return (sentenceSuggestions[i] = { ...sentenceSuggestions[i] });
-    }
-  });
-  return sentenceSuggestions;
+  trackSentenceSuggestions(sentenceSuggestionsPrompt, sentenceSuggestions_);
+  return generateSentenceSuggestions(
+    sendEmailPoints,
+    index,
+    suggestions,
+    sentenceSuggestions_,
+  );
 }
 
-export async function getRootPrompt({
-  descriptors,
-  enableWordCount,
-  fallacies,
-  includeFallacyFinder,
-  includeSummaryResponses,
-  isFirm,
-  isSendEmail,
-  languageLevelCategory,
-  languageLevelSubChoices,
-  promptWordCount,
-  selectedSentence,
+function generateSentenceSuggestionsPrompt(sendEmailPoints, index) {
+  return `Write 5 different variations, rephrasing the following sentence in random professional styles, random language complexities, and random tone. Format as an array of strings.\n\n"${sendEmailPoints[index]}\n\nConvert to stringified json."`;
+}
+
+function trackSentenceSuggestions(prompt, response) {
+  smartlookClient.track('sentenceSuggestions', {
+    prompt,
+    response,
+  });
+}
+
+function generateSentenceSuggestions(
   sendEmailPoints,
-  sentenceSuggestions,
-  state,
-  summary,
-  writingStyle,
-}): Promise<State> {
-  const sender = state.sender !== '' ? state.sender : 'SENDER';
-  const receiver = state.receiver !== '' ? state.receiver : 'RECEIVER';
+  index,
+  suggestions,
+  sentenceSuggestions_,
+) {
+  const newSentenceSuggestions = {};
+  sendEmailPoints.forEach((_, i) => {
+    newSentenceSuggestions[i] =
+      i === index
+        ? JSON.parse(sentenceSuggestions_).reduce((acc, suggestion_) => {
+            const key = uuidv4();
+            return {
+              ...acc,
+              [key]: {
+                selected: false,
+                suggestion: suggestion_,
+                key,
+              },
+            };
+          }, {})
+        : suggestions[i];
+  });
+  return newSentenceSuggestions;
+}
 
-  const length = `${
-    enableWordCount === true ? 'that is ' + promptWordCount + ' words long' : ''
-  }`;
+export async function getRootPrompt(options): Promise<State> {
+  const {
+    descriptors,
+    enableWordCount,
+    fallacies,
+    includeFallacyFinder,
+    includeSummaryResponses,
+    isFirm,
+    isSendEmail,
+    languageLevelCategory,
+    languageLevelSubChoices,
+    promptWordCount,
+    selectedSentence,
+    sendEmailPoints,
+    sentenceSuggestions,
+    state,
+    summary,
+    writingStyle,
+  } = options;
 
-  const hasSummaryResponses = includeSummaryResponses && summary.length > 0;
-  const withSummaryResponses = hasSummaryResponses
-    ? 'the below bullet points'
-    : '';
+  const sender = state.sender || 'SENDER';
+  const receiver = state.receiver || 'RECEIVER';
 
-  const sendOrReplyPrompt1 = isSendEmail
-    ? `Please read the following points and rephrase into an email ${length}from ${sender} to ${receiver}:`
-    : `Please read the email below in quotes and rephrase ${withSummaryResponses} into an email response ${length}from ${receiver} to ${sender}:`;
+  const lengthPrompt = getLengthPrompt(enableWordCount, promptWordCount);
+  const summaryResponsesPrompt = getSummaryResponsesPrompt(
+    includeSummaryResponses,
+    summary,
+  );
+  const summaryText = getSummaryText(includeSummaryResponses, summary);
+  const sendOrReplyPrompt = getSendOrReplyPrompt(
+    isSendEmail,
+    lengthPrompt,
+    sender,
+    receiver,
+    summaryResponsesPrompt,
+  );
+  const stylePrompt = getStylePrompt(writingStyle);
+  const tonePrompt = getTonePrompt(descriptors);
+  const languageComplexityPrompt = getLanguageComplexityPrompt(
+    languageLevelCategory,
+    languageLevelSubChoices,
+  );
+  const fallaciesPrompt = getFallaciesPrompt(includeFallacyFinder, fallacies);
+  const points = getPoints(
+    sendEmailPoints,
+    selectedSentence,
+    sentenceSuggestions,
+  );
 
-  const shouldRephraseStyle = writingStyle !== 'No Style Change';
-  const style = `\n• Rewrite this email with a ${writingStyle.toLowerCase()} writing style.`;
-  const stylePrompt = shouldRephraseStyle ? style : '';
-
-  const hasTone = descriptors.length > 0;
-  const tonePrompt = `\n• Rewrite this email with a tone that is ${descriptors
-    .map((descriptor, index) => {
-      const isLast = descriptors.length - 1 === index;
-      const separator = isLast ? '.' : ', ';
-      const lastAnd = isLast ? 'and ' : '';
-      return `${lastAnd}${descriptor.toLowerCase()}${separator}`;
-    })
-    .join('')}`;
-  const withTone = hasTone ? tonePrompt : '';
-
-  const hasLanguageComplexity = languageLevelCategory !== 'Ignore Complexity';
-  const hasLanguageSubComplexity =
-    languageLevelSubChoices !== null && languageLevelSubChoices.length > 0;
-  const withLanguageSubComplexity = hasLanguageSubComplexity
-    ? `, ${languageLevelSubChoices
-        .map((subChoice, index) => {
-          const isLast = languageLevelSubChoices.length - 1 === index;
-          const separator = isLast ? '' : ', ';
-          const lastAnd = isLast ? 'and ' : '';
-          return `${lastAnd}${subChoice}${separator}`;
-        })
-        .join('')}`
-    : '.';
-  const withLanguageComplexity = hasLanguageComplexity
-    ? `\n• Rewrite this email using language that is ${languageLevelCategory.toLowerCase()}${withLanguageSubComplexity}`
-    : '';
-
-  const context = `"${state.email}"\n`;
-
-  const sendOrReplyPrompt2 = isSendEmail
-    ? `"${sendEmailPoints
-        .map((point, index) => {
-          const alternateSentence =
-            sentenceSuggestions?.[index]?.[selectedSentence?.[index]]
-              ?.suggestion ?? '';
-          const pointOrAlternateSentence =
-            selectedSentence?.[index] === undefined ? point : alternateSentence;
-          return `• ${
-            point !== ''
-              ? pointOrAlternateSentence
-              : `WRITE A POINT HERE (${index + 1})`
-          }"\n`;
-        })
-        .join('')
-        .trimEnd()}`
-    : `${context}\n\n${
-        includeSummaryResponses && summary.length > 0 ? transform(summary) : ''
-      }\n${
-        includeFallacyFinder && fallacies.length > 0
-          ? parseFallacies(fallacies)
-          : ''
-      }`;
-
-  const apologies = isFirm
-    ? '• Do not apologize or use the words "apology", or "apologize".\n'
-    : '• The overall tone of the response is friendly and apologetic.\n';
-
-  const withApology = !isSendEmail ? apologies : '';
-
-  const subjectLine = isSendEmail ? '\n• Include a subject line.' : '';
-
-  const rootPrompt =
-    `${sendOrReplyPrompt1}\n\n${sendOrReplyPrompt2}\n${stylePrompt}${withTone}${withLanguageComplexity}${withApology}${subjectLine}`.trimEnd();
+  const rootPrompt = isSendEmail
+    ? `${sendOrReplyPrompt}\n\n"${points}"\n${fallaciesPrompt}${stylePrompt}${tonePrompt}${languageComplexityPrompt}`
+    : `${sendOrReplyPrompt}\n\n"${state.email}"\n${summaryText}\n${fallaciesPrompt}${stylePrompt}${tonePrompt}${languageComplexityPrompt}`;
 
   return {
-    sender: state.sender,
-    receiver: state.receiver,
-    thread: state.thread,
-    email: state.email,
-    emailResponse: state.emailResponse,
-    fallacies,
-    summary: state.summary,
-    oneSidedArgument: state.oneSidedArgument,
-    rootPrompt: rootPrompt,
-    combinedKnowledge: state.combinedKnowledge,
+    ...state,
+    rootPrompt,
+    isFirm,
   };
+}
+
+function getLengthPrompt(enableWordCount, promptWordCount) {
+  return enableWordCount ? `that is ${promptWordCount} words long` : '';
+}
+
+function getSummaryResponsesPrompt(includeSummaryResponses, summary) {
+  return includeSummaryResponses && summary.length > 0
+    ? 'the below bullet points'
+    : '';
+}
+
+function getSummaryText(includeSummaryResponses, summary) {
+  return includeSummaryResponses && summary.length > 0
+    ? transform(summary)
+    : '';
+}
+
+function getSendOrReplyPrompt(
+  isSendEmail,
+  lengthPrompt,
+  sender,
+  receiver,
+  summaryResponsesPrompt,
+) {
+  return isSendEmail
+    ? `Please read the following points and rephrase into an email ${lengthPrompt} from ${sender} to ${receiver}:`
+    : `Please read the email below in quotes and rephrase ${summaryResponsesPrompt} into an email response ${lengthPrompt} from ${receiver} to ${sender}:`;
+}
+
+function getStylePrompt(writingStyle) {
+  return writingStyle !== 'No Style Change'
+    ? `\n• Rewrite this email with a ${writingStyle.toLowerCase()} writing style.`
+    : '';
+}
+
+function getTonePrompt(descriptors) {
+  return descriptors.length > 0
+    ? `\n• Rewrite this email with a tone that is ${descriptors
+        .map((descriptor, index) => {
+          const isLast = descriptors.length - 1 === index;
+          const separator = isLast ? '.' : ', ';
+          const lastAnd = isLast ? 'and ' : '';
+          return `${lastAnd}${descriptor.toLowerCase()}${separator}`;
+        })
+        .join('')}`
+    : '';
+}
+
+function getLanguageComplexityPrompt(
+  languageLevelCategory,
+  languageLevelSubChoices,
+) {
+  return languageLevelCategory !== 'Ignore Complexity'
+    ? `\n• Rewrite this email using language that is ${languageLevelCategory.toLowerCase()}${
+        languageLevelSubChoices && languageLevelSubChoices.length > 0
+          ? `, ${languageLevelSubChoices
+              .map((subChoice, index) => {
+                const isLast = languageLevelSubChoices.length - 1 === index;
+                const separator = isLast ? '' : ', ';
+                const lastAnd = isLast ? 'and ' : '';
+                return `${lastAnd}${subChoice}${separator}`;
+              })
+              .join('')}`
+          : '.'
+      }`
+    : '';
+}
+
+function getFallaciesPrompt(includeFallacyFinder, fallacies) {
+  return includeFallacyFinder && fallacies.length > 0
+    ? parseFallacies(fallacies)
+    : '';
+}
+
+function getPoints(sendEmailPoints, selectedSentence, sentenceSuggestions) {
+  return sendEmailPoints
+    .map((point, index) => {
+      const alternateSentence =
+        sentenceSuggestions?.[index]?.[selectedSentence?.[index]]?.suggestion ||
+        '';
+      const pointOrAlternateSentence =
+        selectedSentence?.[index] === undefined ? point : alternateSentence;
+      return `• ${
+        point !== ''
+          ? pointOrAlternateSentence
+          : `WRITE A POINT HERE (${index + 1})`
+      }`;
+    })
+    .join('\n');
 }
 
 export async function getResponseEmail({
@@ -218,24 +282,25 @@ export async function getResponseEmail({
   rootPrompt,
   temperature,
 }): Promise<State> {
-  const emailResponse = await callChatGPT(rootPrompt, temperature);
+  const emailResponse = await generateEmailResponse(rootPrompt, temperature);
+  trackResponseEmail(rootPrompt, emailResponse);
+  console.log('emailResponse', emailResponse);
+  return generateResponseState(state, emailResponse);
+}
+
+async function generateEmailResponse(rootPrompt, temperature) {
+  return callChatGPT(rootPrompt, temperature);
+}
+
+function trackResponseEmail(prompt, response) {
   smartlookClient.track('response email', {
-    prompt: rootPrompt,
-    response: emailResponse,
+    prompt,
+    response,
   });
-  console.debug('emailResponse', emailResponse);
-  return {
-    sender: state.sender,
-    receiver: state.receiver,
-    thread: state.thread,
-    email: state.email,
-    emailResponse: emailResponse.trimStart(),
-    fallacies: state.fallacies,
-    summary: state.summary,
-    oneSidedArgument: state.oneSidedArgument,
-    rootPrompt,
-    combinedKnowledge: state.combinedKnowledge,
-  };
+}
+
+function generateResponseState(state, emailResponse) {
+  return Object.assign({}, state, { emailResponse: emailResponse.trimStart() });
 }
 
 export const email = `"Thanks, Dan. Dave updated the daycare. I am assuming he told the kids he was picking up this morning and about the plans he mentioned so am now worried they will confused/upset tonight. Dave never shares info with me so I don’t know what the plans were, though.
