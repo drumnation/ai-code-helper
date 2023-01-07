@@ -18,10 +18,6 @@ import {
 } from './App.types';
 
 function useApp() {
-  useEffect(() => {
-    return () => {};
-  }, []);
-
   const initialState: State = {
     sender: '',
     receiver: '',
@@ -110,7 +106,6 @@ function useApp() {
       ...selectedSentence_,
       [i]: selectedSentence_[i] === key ? '' : key,
     };
-    console.debug('newObject', newSelectedSentence);
     updateSelectedSentence(newSelectedSentence);
   };
 
@@ -300,48 +295,46 @@ function useApp() {
   const handleAddNewDraftEmail = () => {
     const count = draftEmailVersions.length + 1;
     const created = Date.now();
+    const email = state.emailResponse;
+    const title = `Draft ${count}`;
+    const wordCount = promptWordCount;
+    const toneTags = descriptors.map((tone) => {
+      return (
+        <Tag style={{ fontWeight: 'bold' }} color={descriptorColors[tone]}>
+          {tone}
+        </Tag>
+      );
+    });
+    const languageLevelCategoryTag = languageLevelCategory !==
+      'Ignore Complexity' && (
+      <Tag style={{ fontWeight: 'bold' }} color='gray'>
+        {languageLevelCategory}
+      </Tag>
+    );
+    const languageLevelSubChoicesTags = languageLevelSubChoices.map(
+      (subChoice) => {
+        return (
+          <Tag key={subChoice} style={{ fontWeight: 'bold' }}>
+            {subChoice}
+          </Tag>
+        );
+      },
+    );
+    const descriptionTag = (
+      <Tag color='default'>{writingStyle.replace(/\s*\(.*?\)/, '')}</Tag>
+    );
     const responses = [
       ...draftEmailVersions,
       {
-        email: state.emailResponse,
-        title: `Draft ${count}`,
-        wordCount: promptWordCount,
+        email,
+        title,
+        wordCount,
         enableWordCount,
         isFirm,
-        tone: (
-          <>
-            {descriptors.map((tone) => {
-              return (
-                <Tag
-                  style={{ fontWeight: 'bold' }}
-                  color={descriptorColors[tone]}
-                >
-                  {tone}
-                </Tag>
-              );
-            })}
-          </>
-        ),
-        languageLevelCategory: languageLevelCategory !==
-          'Ignore Complexity' && (
-          <Tag style={{ fontWeight: 'bold' }} color='gray'>
-            {languageLevelCategory}
-          </Tag>
-        ),
-        languageLevelSubChoices: (
-          <>
-            {languageLevelSubChoices.map((subChoice) => {
-              return (
-                <Tag key={subChoice} style={{ fontWeight: 'bold' }}>
-                  {subChoice}
-                </Tag>
-              );
-            })}
-          </>
-        ),
-        description: (
-          <Tag color='default'>{writingStyle.replace(/\s*\(.*?\)/, '')}</Tag>
-        ),
+        tone: toneTags,
+        languageLevelCategory: languageLevelCategoryTag,
+        languageLevelSubChoices: languageLevelSubChoicesTags,
+        description: descriptionTag,
         created,
       },
     ];
