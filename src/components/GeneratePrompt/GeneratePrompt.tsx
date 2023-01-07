@@ -125,7 +125,10 @@ const GeneratePrompt = ({
               </Button>
             </Button.Group>
             {error !== '' && (
-              <Space direction='vertical' style={{ width: '100%' }}>
+              <Space
+                direction='vertical'
+                style={{ width: '100%', marginTop: 16 }}
+              >
                 <Alert
                   message='Error! Please try again.'
                   description={error}
