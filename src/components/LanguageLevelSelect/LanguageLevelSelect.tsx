@@ -36,7 +36,6 @@ const LanguageLevelSelect = ({
   handleLanguageLevelCategorySelect,
   handleLanguageLevelSubChoiceSelect,
 }) => {
-  console.debug('language', { languageLevelCategory, languageLevelSubChoices });
   return (
     <>
       <Select
