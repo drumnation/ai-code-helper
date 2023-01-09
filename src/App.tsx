@@ -29,6 +29,7 @@ function App() {
     enableWordCount,
     error,
     fallacies,
+    generateEmailError,
     generateEmailResponse,
     generateFallacies,
     generateRootPrompt,
@@ -209,6 +210,7 @@ function App() {
           error={error}
           fallacies={fallacies}
           fallacyColumns={fallacyColumns}
+          generateEmailError={generateEmailError}
           generateEmailResponse={generateEmailResponse}
           generateFallacies={generateFallacies}
           generateRootPrompt={generateRootPrompt}

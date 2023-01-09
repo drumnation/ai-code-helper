@@ -33,6 +33,7 @@ const GeneratePrompt = ({
   error,
   fallacies,
   fallacyColumns,
+  generateEmailError,
   generateEmailResponse,
   generateFallacies,
   generateRootPrompt,
@@ -328,6 +329,15 @@ const GeneratePrompt = ({
               Reset Prompt <ClearOutlined />
             </Button>
           </Button.Group>
+          {generateEmailError !== '' && (
+            <Space direction='vertical' style={{ width: '100%' }}>
+              <Alert
+                message='Error! Please try again.'
+                description={generateEmailError}
+                type='error'
+              />
+            </Space>
+          )}
         </div>
       </Panel>
     </Collapse>

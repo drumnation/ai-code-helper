@@ -1,12 +1,14 @@
-import { Tag } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
+import { callChatGPT, getTags } from './App.logic';
 
 import {
+  generateSentenceSuggestions,
   getFallacies,
   getResponseEmail,
   getRootPrompt,
   getSentenceSuggestions,
   getSummary,
+  trackSentenceSuggestions,
 } from './App.prompts';
 import {
   Summary,
@@ -15,6 +17,8 @@ import {
   SummaryAction,
   Fallacy,
   LoadingState,
+  ISelectedSentence,
+  ISendEmailPoints,
 } from './App.types';
 
 function useApp() {
@@ -87,7 +91,11 @@ function useApp() {
       index,
       sentenceSuggestions,
       temperature,
+      trackSentenceSuggestions,
+      callChatGPT,
+      generateSentenceSuggestions,
     });
+    console.log('sentenceSuggestions', sentenceSuggestions_);
     updateSentenceSuggestions(sentenceSuggestions_);
     handleUpdateSentenceSuggestionsLoading({
       index,
@@ -95,12 +103,17 @@ function useApp() {
     });
   };
 
-  const [selectedSentence, updateSelectedSentence] = useState({});
+  const [selectedSentence, updateSelectedSentence] =
+    useState<ISelectedSentence>({});
 
   const handleSentenceSelect = ({
     i,
     key,
     selectedSentence: selectedSentence_,
+  }: {
+    i: number;
+    key: string;
+    selectedSentence: ISelectedSentence;
   }) => {
     const newSelectedSentence = {
       ...selectedSentence_,
@@ -109,10 +122,11 @@ function useApp() {
     updateSelectedSentence(newSelectedSentence);
   };
 
-  const [sendEmailPoints, updateSendEmailPoints] = useState<string[]>(['']);
+  const [sendEmailPoints, updateSendEmailPoints] = useState<ISendEmailPoints>([
+    '',
+  ]);
 
   useEffect(() => {
-    // Retrieve the values from local storage when the component mounts
     const storedSendEmailPoints = localStorage.getItem('sendEmailPoints');
     const storedReplyToEmail = localStorage.getItem('replyToEmail');
     const storedSender = localStorage.getItem('sender');
@@ -260,37 +274,17 @@ function useApp() {
   const handleLanguageLevelCategorySelect = (choice) => {
     updateLanguageLevelCategory(choice);
   };
+
   const handleLanguageLevelSubChoiceSelect = (choice) => {
     updateLanguageLevelSubChoice(choice);
   };
 
-  const [draftEmailVersions, updateDraftEmailVersions] = useState([]);
+  useEffect(() => {
+    handleLanguageLevelSubChoiceSelect([]);
+    return () => {};
+  }, [languageLevelCategory]);
 
-  const descriptorColors = {
-    Brief: '#FF7F50',
-    Clear: '#ADD8E6',
-    Compelling: '#FF69B4',
-    Concise: '#00FFFF',
-    Convincing: '#800080',
-    Descriptive: '#D2691E',
-    Detailed: '#00FF7F',
-    Dynamic: '#FFA500',
-    Elaborate: '#FFD700',
-    Engaging: '#FFFF00',
-    Evocative: '#00FF00',
-    Expressive: '#00FF7F',
-    Forceful: '#0000FF',
-    Firm: '#9400D3',
-    Friendly: '#077007',
-    Informative: '#00008B',
-    Passionate: '#FF69B4',
-    Persuasive: '#FFA500',
-    Poetic: '#800080',
-    Powerful: '#FF69B4',
-    Precise: '#0000FF',
-    Succinct: '#FFFF00',
-    Vivid: '#FFC0CB',
-  };
+  const [draftEmailVersions, updateDraftEmailVersions] = useState([]);
 
   const handleAddNewDraftEmail = () => {
     const count = draftEmailVersions.length + 1;
@@ -298,30 +292,16 @@ function useApp() {
     const email = state.emailResponse;
     const title = `Draft ${count}`;
     const wordCount = promptWordCount;
-    const toneTags = descriptors.map((tone) => {
-      return (
-        <Tag style={{ fontWeight: 'bold' }} color={descriptorColors[tone]}>
-          {tone}
-        </Tag>
-      );
-    });
-    const languageLevelCategoryTag = languageLevelCategory !==
-      'Ignore Complexity' && (
-      <Tag style={{ fontWeight: 'bold' }} color='gray'>
-        {languageLevelCategory}
-      </Tag>
-    );
-    const languageLevelSubChoicesTags = languageLevelSubChoices.map(
-      (subChoice) => {
-        return (
-          <Tag key={subChoice} style={{ fontWeight: 'bold' }}>
-            {subChoice}
-          </Tag>
-        );
-      },
-    );
-    const descriptionTag = (
-      <Tag color='default'>{writingStyle.replace(/\s*\(.*?\)/, '')}</Tag>
+    const {
+      toneTags,
+      languageLevelCategoryTag,
+      languageLevelSubChoicesTags,
+      descriptionTag,
+    } = getTags(
+      descriptors,
+      languageLevelCategory,
+      languageLevelSubChoices,
+      writingStyle,
     );
     const responses = [
       ...draftEmailVersions,
@@ -383,35 +363,12 @@ function useApp() {
     setError('');
     try {
       handleLoading({ type: 'fallacies', value: true });
-      const {
-        emailResponse,
-        fallacies,
-        summary,
-        oneSidedArgument,
-        rootPrompt,
-        combinedKnowledge,
-        email,
-        sender,
-        receiver,
-        thread,
-      } = await getFallacies({ state, isSendEmail });
-      updateState({
-        sender,
-        receiver,
-        thread,
-        email,
-        emailResponse,
-        fallacies,
-        summary,
-        oneSidedArgument,
-        rootPrompt,
-        combinedKnowledge,
-      });
-      updateFallacies(fallacies);
+      const data = await getFallacies({ state, isSendEmail });
+      updateState(data);
+      updateFallacies(data.fallacies);
       generateRootPrompt();
       handleLoading({ type: 'fallacies', value: false });
     } catch (error) {
-      console.debug('generate expert feedback error', error);
       setError(`${error.message}`);
       handleLoading({ type: 'fallacies', value: false });
     }
@@ -447,10 +404,9 @@ function useApp() {
       });
       updateSummary(summary);
       generateRootPrompt();
-      handleLoading({ type: 'summary', value: false });
     } catch (error) {
-      console.debug('generate expert feedback error', error);
-      setError(`${error.message}`);
+      setError(error.message);
+    } finally {
       handleLoading({ type: 'summary', value: false });
     }
   };
@@ -512,7 +468,6 @@ function useApp() {
     includeSummaryResponses,
     isFirm,
     isSendEmail,
-    isSendEmail,
     languageLevelCategory,
     languageLevelSubChoices,
     promptWordCount,
@@ -548,11 +503,19 @@ function useApp() {
     writingStyle,
   ]);
 
+  const [generateEmailError, setGenerateEmailError] = useState('');
+
   const generateEmailResponse = async () => {
+    setGenerateEmailError('');
     handleLoading({ type: 'emailResponse', value: true });
-    const data = await getResponseEmail({ state, rootPrompt, temperature });
-    updateState(data);
-    handleLoading({ type: 'emailResponse', value: false });
+    try {
+      const data = await getResponseEmail({ state, rootPrompt, temperature });
+      updateState(data);
+    } catch (error) {
+      setGenerateEmailError(error.message);
+    } finally {
+      handleLoading({ type: 'emailResponse', value: false });
+    }
   };
 
   return {
@@ -561,6 +524,7 @@ function useApp() {
     enableWordCount,
     error,
     fallacies,
+    generateEmailError,
     generateEmailResponse,
     generateFallacies,
     generateRootPrompt,
@@ -612,10 +576,3 @@ function useApp() {
 }
 
 export default useApp;
-
-// const generateDebatePrompt = async () => {
-//   handleLoading({ type: 'debatePrompt', value: true });
-//   const data = await getDebatePrompt({ state });
-//   updateState(data);
-//   handleLoading({ type: 'debatePrompt', value: false });
-// };
