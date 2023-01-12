@@ -11,13 +11,16 @@ const openai = new OpenAIApi(configuration);
 export async function callChatGPT(
   prompt: string,
   temperature = 0.6,
+  context?,
 ): Promise<any> {
   const completion = await openai.createCompletion({
     model: 'text-davinci-003',
     prompt,
     temperature,
     max_tokens: 1000,
+    stop: ['INTERVIEW:', 'WRITE:'],
   });
+  console.debug('completion', completion);
   const text = completion.data.choices[0].text;
   return text;
 }

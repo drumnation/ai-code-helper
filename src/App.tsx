@@ -24,6 +24,7 @@ import { GeneratePrompt, NewEmailPoint } from './components';
 
 function App() {
   const {
+    clearInterview,
     descriptors,
     draftEmailVersions,
     enableWordCount,
@@ -32,6 +33,7 @@ function App() {
     generateEmailError,
     generateEmailResponse,
     generateFallacies,
+    generateInterview,
     generateRootPrompt,
     generateSummary,
     handleAddNewDraftEmail,
@@ -54,11 +56,13 @@ function App() {
     handleSummaryResponsesChange,
     handleToggleFirm,
     handleToggleWordCount,
+    handleUpdateInterview,
     handleUpdateIsSendEmail,
     handleUpdateSendEmailPoints,
     handleWritingStyleRephrase,
     includeFallacyFinder,
     includeSummaryResponses,
+    interview,
     isFirm,
     isSendEmail,
     languageLevelCategory,
@@ -205,6 +209,10 @@ function App() {
         )}
 
         <GeneratePrompt
+          clearInterview={clearInterview}
+          interview={interview}
+          generateInterview={generateInterview}
+          handleUpdateInterview={handleUpdateInterview}
           descriptors={descriptors}
           enableWordCount={enableWordCount}
           error={error}

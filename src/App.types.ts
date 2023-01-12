@@ -1,3 +1,5 @@
+import { Interview } from './hooks/useInterviewer';
+
 export type SummaryAction =
   | 'agree'
   | 'disagree'
@@ -46,6 +48,7 @@ export interface LoadingState {
   debatePrompt: boolean;
   rootPrompt: boolean;
   emailResponse: boolean;
+  interviewer: boolean;
 }
 
 export interface ISelectedSentence {
@@ -80,6 +83,7 @@ export interface IRootPromptOptions {
   fallacies: Fallacy[];
   includeFallacyFinder: boolean;
   includeSummaryResponses: boolean;
+  interview: Interview[];
   isFirm: boolean;
   isSendEmail: boolean;
   languageLevelCategory: string;

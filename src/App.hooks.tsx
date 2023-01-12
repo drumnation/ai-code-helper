@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { callChatGPT, getTags } from './App.logic';
+import useInterviewer from './hooks/useInterviewer';
 
 import {
   generateSentenceSuggestions,
@@ -35,6 +36,29 @@ function useApp() {
     combinedKnowledge: '',
   };
   const [state, updateState] = useState<State>(initialState);
+
+  const [loading, updateLoading] = useState<LoadingState>({
+    fallacies: false,
+    summary: false,
+    debatePrompt: false,
+    rootPrompt: false,
+    emailResponse: false,
+    interviewer: false,
+  });
+
+  const {
+    interview,
+    handleUpdateInterview,
+    generateInterview,
+    updateInterview,
+    clearInterview,
+  } = useInterviewer({
+    updateLoading,
+    loading,
+    email: state.email,
+    sender: state.sender,
+    receiver: state.receiver,
+  });
 
   const [fallacies, updateFallacies] = useState<Fallacy[]>([]);
 
@@ -132,6 +156,9 @@ function useApp() {
     const storedSender = localStorage.getItem('sender');
     const storedReceiver = localStorage.getItem('receiver');
     const storedIsSendEmail = localStorage.getItem('isSendEmail');
+    const storedInterview = localStorage.getItem('interview');
+    console.log('storedInterview', storedInterview);
+    if (storedInterview) updateInterview(JSON.parse(storedInterview));
     if (storedSendEmailPoints)
       updateSendEmailPoints(JSON.parse(storedSendEmailPoints));
     if (storedIsSendEmail) updateIsSendEmail(JSON.parse(storedIsSendEmail));
@@ -240,14 +267,6 @@ function useApp() {
   const handleSummaryResponsesChange = (event) => {
     setIncludeSummaryResponses(event.target.checked);
   };
-
-  const [loading, updateLoading] = useState<LoadingState>({
-    fallacies: false,
-    summary: false,
-    debatePrompt: false,
-    rootPrompt: false,
-    emailResponse: false,
-  });
 
   const [writingStyle, updateWritingStyle] = useState('No Style Change');
   const handleWritingStyleRephrase = (style) => {
@@ -455,6 +474,7 @@ function useApp() {
         state,
         summary,
         writingStyle,
+        interview,
       });
       setRootPrompt(data.rootPrompt);
       handleLoading({ type: 'rootPrompt', value: false });
@@ -466,6 +486,7 @@ function useApp() {
     handleLoading,
     includeFallacyFinder,
     includeSummaryResponses,
+    interview,
     isFirm,
     isSendEmail,
     languageLevelCategory,
@@ -487,6 +508,7 @@ function useApp() {
     enableWordCount,
     includeFallacyFinder,
     includeSummaryResponses,
+    interview,
     isFirm,
     isSendEmail,
     isSendEmail,
@@ -509,7 +531,11 @@ function useApp() {
     setGenerateEmailError('');
     handleLoading({ type: 'emailResponse', value: true });
     try {
-      const data = await getResponseEmail({ state, rootPrompt, temperature });
+      const data = await getResponseEmail({
+        state,
+        rootPrompt,
+        temperature,
+      });
       updateState(data);
     } catch (error) {
       setGenerateEmailError(error.message);
@@ -519,6 +545,7 @@ function useApp() {
   };
 
   return {
+    clearInterview,
     descriptors,
     draftEmailVersions,
     enableWordCount,
@@ -527,6 +554,7 @@ function useApp() {
     generateEmailError,
     generateEmailResponse,
     generateFallacies,
+    generateInterview,
     generateRootPrompt,
     generateSummary,
     handleAddNewDraftEmail,
@@ -549,11 +577,13 @@ function useApp() {
     handleSummaryResponsesChange,
     handleToggleFirm,
     handleToggleWordCount,
+    handleUpdateInterview,
     handleUpdateIsSendEmail,
     handleUpdateSendEmailPoints,
     handleWritingStyleRephrase,
     includeFallacyFinder,
     includeSummaryResponses,
+    interview,
     isFirm,
     isSendEmail,
     languageLevelCategory,

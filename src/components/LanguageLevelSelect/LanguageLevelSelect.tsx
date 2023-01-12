@@ -9,6 +9,7 @@ const wordChoices = [
   'Ornate',
   'Elegant',
   'Poetic',
+  'Aggressive',
 ];
 
 const subChoices = {
@@ -28,6 +29,7 @@ const subChoices = {
   Ornate: ['Elaborate', 'Florid', 'Ornamental', 'Decorated'],
   Elegant: ['Graceful', 'Refined', 'Polished', 'Stylish'],
   Poetic: ['Imaginative', 'Creative', 'Expressive', 'Figurative'],
+  Aggressive: ['Assertive', 'Domineering', 'Confrontational', 'Hostile'],
 };
 
 const LanguageLevelSelect = ({

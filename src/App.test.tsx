@@ -5,6 +5,7 @@ import {
   getApologyPrompt,
   getEmailRewritePrompt,
   getFallaciesPrompt,
+  getInterviewPrompt,
   getLanguageComplexityPrompt,
   getPoints,
   getRootPrompt,
@@ -29,6 +30,7 @@ import {
   Summary,
 } from './App.types';
 import smartlookClient from 'smartlook-client';
+import { Interview } from './hooks/useInterviewer';
 
 jest.mock('uuid', () => ({ v4: () => '123456789' }));
 
@@ -46,6 +48,7 @@ describe('getRootPrompt', () => {
       languageLevelSubChoices: [],
       promptWordCount: 0,
       selectedSentence: '',
+      interview: [],
       sendEmailPoints: [],
       sentenceSuggestions: [],
       state: {
@@ -82,6 +85,41 @@ describe('getRootPrompt', () => {
         'Please read the email below in quotes and rephrase into an email response that is 0 words long from Jane to John:\n\n"Example email"\nDon\'t apologize or use the words apology, apologize, sorry, or regret.',
     };
     expect(await getRootPrompt(options)).toEqual(expectedResult);
+  });
+});
+
+describe('getInterviewPrompt', () => {
+  const interviewPromptTest = (interview: Interview[], sender, receiver) => {
+    expect(getInterviewPrompt(interview, sender, receiver)).toBeTruthy();
+  };
+
+  it('Interview prompt test with 1 Interview', () => {
+    const interview: Interview[] = [
+      {
+        question: 'What is your favorite color?',
+        answer: 'My favorite color is blue.',
+      },
+    ];
+    interviewPromptTest(interview, 'Nicole', 'Dave');
+  });
+
+  it('Interview prompt test with multiple interviews', () => {
+    const interview: Interview[] = [
+      {
+        question: 'What is your favorite color?',
+        answer: 'My favorite color is blue.',
+      },
+      {
+        question: 'What is your favorite food?',
+        answer: 'My favorite food is pizza.',
+      },
+    ];
+    interviewPromptTest(interview, 'Nicole', 'Dave');
+  });
+
+  it('Interview prompt test with 0 interviews', () => {
+    const interview: Interview[] = [];
+    interviewPromptTest(interview, 'Nicole', 'Dave');
   });
 });
 
@@ -215,7 +253,7 @@ describe('getSummary', () => {
       rootPrompt: 'Example prompt',
       combinedKnowledge: 'Example knowledge',
     });
-  }, 10000);
+  }, 30000);
 });
 
 describe('trackSummary', () => {

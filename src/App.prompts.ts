@@ -11,6 +11,7 @@ import {
   State,
   Summary,
 } from './App.types';
+import { Interview } from './hooks/useInterviewer';
 
 export async function getFallacies({
   state,
@@ -188,6 +189,7 @@ export async function getRootPrompt(
     fallacies,
     includeFallacyFinder,
     includeSummaryResponses,
+    interview,
     isFirm,
     isSendEmail,
     languageLevelCategory,
@@ -237,15 +239,32 @@ export async function getRootPrompt(
     tonePrompt,
   );
 
+  const interviewPrompt = getInterviewPrompt(interview, sender, receiver);
+
   const rootPrompt = isSendEmail
     ? `${sendOrReplyPrompt}\n\n"${points}"${emailRewritePrompt}`
-    : `${sendOrReplyPrompt}\n\n"${state.email}"${summaryText}${fallaciesPrompt}${emailRewritePrompt}${apology}`;
+    : `${sendOrReplyPrompt}\n\n"${state.email}"${summaryText}${fallaciesPrompt}${interviewPrompt}\n\nWRITE:${emailRewritePrompt}${apology}`;
 
   return {
     ...state,
     rootPrompt,
     isFirm,
   };
+}
+
+export function getInterviewPrompt(
+  interview: Interview[],
+  sender: string,
+  receiver: string,
+) {
+  return interview.length > 0
+    ? `\n\nINTERVIEW:\nPlease read the question and answer below answered by ${receiver} in reference to ${sender} to gain context for writing an email response.\n\n${interview
+        .map((topic: Interview, index: number) => {
+          return `Q: ${topic.question}\n\A: ${topic.answer}\n\n`;
+        })
+        .join('')
+        .trimEnd()}`
+    : '';
 }
 
 export function getLengthPrompt(
@@ -320,12 +339,12 @@ export function getLanguageComplexityPrompt(
   return languageLevelCategory !== 'Ignore Complexity'
     ? `using language that is ${languageLevelCategory.toLowerCase()}${
         languageLevelSubChoices && languageLevelSubChoices.length > 0
-          ? `${languageLevelSubChoices
+          ? `, ${languageLevelSubChoices
               .map((subChoice, index) => {
                 const isLast = languageLevelSubChoices.length - 1 === index;
                 const separator = isLast ? '' : ', ';
                 const lastAnd = isLast ? ' and ' : '';
-                return `${lastAnd}${subChoice}${separator}`;
+                return `${lastAnd}${subChoice.toLowerCase()}${separator}`;
               })
               .join('')}`
           : ''
@@ -343,12 +362,28 @@ export function getEmailRewritePrompt(
     languageComplexityPrompt === '' &&
     tonePrompt !== ''
   ) {
-    return `\n\nRewrite this email with ${tonePrompt}.`;
+    return `\n\nRephrase and respond to this email with ${tonePrompt}.`;
   } else if (
     (stylePrompt !== '' || languageComplexityPrompt !== '') &&
     tonePrompt !== ''
   ) {
-    return `\n\nRewrite this email with ${stylePrompt} ${languageComplexityPrompt} and ${tonePrompt}.`;
+    return `\n\nRephrase and respond to this email with ${stylePrompt} ${languageComplexityPrompt} and ${tonePrompt}.`;
+  } else if (
+    stylePrompt !== '' &&
+    languageComplexityPrompt !== '' &&
+    tonePrompt === ''
+  ) {
+    return `\n\nRephrase and respond to this email with ${stylePrompt} ${languageComplexityPrompt}.`;
+  } else if (
+    stylePrompt !== '' &&
+    (languageComplexityPrompt === '' || tonePrompt === '')
+  ) {
+    return `\n\nRephrase and respond to this email with ${stylePrompt}.`;
+  } else if (
+    languageComplexityPrompt !== '' &&
+    (stylePrompt === '' || tonePrompt === '')
+  ) {
+    return `\n\nRephrase and respond to this email with ${languageComplexityPrompt}.`;
   } else {
     return '';
   }

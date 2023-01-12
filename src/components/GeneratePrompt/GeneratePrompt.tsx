@@ -15,11 +15,16 @@ import {
   Table,
 } from 'antd';
 
-import { PlayCircleOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import {
+  PlayCircleOutlined,
+  UnorderedListOutlined,
+  OrderedListOutlined,
+} from '@ant-design/icons';
 import { Alert, Space } from 'antd';
 
 import {
   DescriptorsSelect,
+  Interviewer,
   LanguageLevelSelect,
   SummaryTable,
   WritingStyleSelect,
@@ -28,7 +33,11 @@ import {
 const { Panel } = Collapse;
 
 const GeneratePrompt = ({
+  clearInterview,
   descriptors,
+  interview,
+  generateInterview,
+  handleUpdateInterview,
   enableWordCount,
   error,
   fallacies,
@@ -107,24 +116,70 @@ const GeneratePrompt = ({
             title='Fine Tuning and Analysis Tools'
             style={{ marginBottom: 10 }}
           >
-            <Button.Group>
+            <ul
+              style={{
+                marginBottom: 0,
+                marginLeft: 0,
+                paddingLeft: 10,
+                marginTop: -5,
+              }}
+            >
               <Button
-                style={{ width: 145, background: 'green' }}
+                style={{
+                  width: 145,
+                  background: 'green',
+                  marginRight: 10,
+                  marginBottom: 10,
+                }}
                 type='primary'
-                onClick={generateFallacies}
-                loading={loading.fallacies}
+                onClick={generateInterview}
+                loading={loading.summary}
               >
-                Fallacy Finder {!loading.fallacies && <PlayCircleOutlined />}
+                Interviewer {!loading.interviewer && <OrderedListOutlined />}
               </Button>
+              <li>
+                Use the <b>Interviewer</b> to be interviewed for context info
+                about the email.
+              </li>
               <Button
-                style={{ width: 145, background: 'green' }}
+                style={{
+                  width: 145,
+                  background: 'green',
+                  marginTop: 10,
+                  marginRight: 10,
+                  marginBottom: 10,
+                }}
                 type='primary'
                 onClick={generateSummary}
                 loading={loading.summary}
               >
                 Summarizer {!loading.summary && <UnorderedListOutlined />}
               </Button>
-            </Button.Group>
+              <li>
+                Use the <b>Summarizer</b> to provide accurate feedback about
+                each point {state.sender !== '' ? state.sender : 'SENDER'} has
+                made.
+              </li>
+              <Button
+                style={{
+                  width: 145,
+                  background: 'green',
+                  marginRight: 10,
+                  marginBottom: 10,
+                  marginTop: 10,
+                }}
+                type='primary'
+                onClick={generateFallacies}
+                loading={loading.fallacies}
+              >
+                Fallacy Finder {!loading.fallacies && <PlayCircleOutlined />}
+              </Button>
+              <li>
+                Use the <b>Fallacy Finder</b> to discover unfair or illogical
+                arguments in {state.sender !== '' ? state.sender : 'SENDER'}'s
+                email.
+              </li>
+            </ul>
             {error !== '' && (
               <Space
                 direction='vertical'
@@ -137,18 +192,6 @@ const GeneratePrompt = ({
                 />
               </Space>
             )}
-            <ul style={{ marginBottom: 0, marginLeft: 0, paddingLeft: 10 }}>
-              <li>
-                Use the <b>Fallacy Finder</b> to discover unfair or illogical
-                arguments in {state.sender !== '' ? state.sender : 'SENDER'}'s
-                email.
-              </li>
-              <li>
-                Use the <b>Summarizer</b> to provide accurate feedback about
-                each point {state.sender !== '' ? state.sender : 'SENDER'} has
-                made.
-              </li>
-            </ul>
           </Card>
         )}
         {fallacies.length > 0 && !isSendEmail && (
@@ -162,13 +205,16 @@ const GeneratePrompt = ({
           />
         )}
         {!isSendEmail && <div style={{ height: 16 }} />}
-        {summary.length > 0 && (
+        {!isSendEmail && summary?.length > 0 && (
           <SummaryTable data={summary} updateRecord={updateSummaryRecord} />
         )}
-        <h5 style={{ marginLeft: 16, marginTop: 0, marginBottom: 16 }}>
-          For Best Results Choose 1: Tone, Language Complexity, or Writing
-          Style.
-        </h5>
+        {!isSendEmail && interview?.length > 0 && (
+          <Interviewer
+            clearInterview={clearInterview}
+            interview={interview}
+            handleUpdateInterview={handleUpdateInterview}
+          />
+        )}
         {!isSendEmail && (
           <Switch
             style={{
