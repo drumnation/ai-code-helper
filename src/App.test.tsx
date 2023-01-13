@@ -44,7 +44,7 @@ describe('getRootPrompt', () => {
       includeSummaryResponses: false,
       isFirm: true,
       isSendEmail: false,
-      languageLevelCategory: '',
+      languageLevelCategory: 'Ignore Complexity',
       languageLevelSubChoices: [],
       promptWordCount: 0,
       selectedSentence: '',
@@ -76,13 +76,13 @@ describe('getRootPrompt', () => {
         combinedKnowledge: 'Example knowledge',
       },
       summary: [],
-      writingStyle: '',
+      writingStyle: 'No Style Change',
     };
     const expectedResult = {
       ...options.state,
       isFirm: true,
       rootPrompt:
-        'Please read the email below in quotes and rephrase into an email response that is 0 words long from Jane to John:\n\n"Example email"\nDon\'t apologize or use the words apology, apologize, sorry, or regret.',
+        'Please read the email below in quotes and rephrase into an email response that is 0 words long from Jane to John:\n\n"Example email"\n\nWRITE:\nDon\'t apologize or use the words apology, apologize, sorry, or regret.',
     };
     expect(await getRootPrompt(options)).toEqual(expectedResult);
   });
@@ -119,7 +119,8 @@ describe('getInterviewPrompt', () => {
 
   it('Interview prompt test with 0 interviews', () => {
     const interview: Interview[] = [];
-    interviewPromptTest(interview, 'Nicole', 'Dave');
+    const result = getInterviewPrompt(interview, 'Nicole', 'Dave');
+    expect(result).toBe('');
   });
 });
 
@@ -637,7 +638,7 @@ describe('getLanguageComplexityPrompt', () => {
     );
     expect(
       getLanguageComplexityPrompt('Easy to Understand', ['Simple']),
-    ).toEqual('using language that is easy to understand and Simple');
+    ).toEqual('using language that is easy to understand, and simple');
     expect(getLanguageComplexityPrompt('Ignore Complexity', [])).toEqual('');
   });
 });
@@ -647,10 +648,12 @@ describe('getEmailRewritePrompt', () => {
     const stylePrompt = '';
     const languageComplexityPrompt = '';
     const tonePrompt = '';
+    const isSendEmail = false;
     const result = getEmailRewritePrompt(
       stylePrompt,
       languageComplexityPrompt,
       tonePrompt,
+      isSendEmail,
     );
     expect(result).toEqual('');
   });
@@ -679,12 +682,16 @@ describe('getEmailRewritePrompt', () => {
     const stylePrompt = '';
     const languageComplexityPrompt = '';
     const tonePrompt = 'a persuasive tone';
+    const isSendEmail = false;
     const result = getEmailRewritePrompt(
       stylePrompt,
       languageComplexityPrompt,
       tonePrompt,
+      isSendEmail,
     );
-    expect(result).toEqual('\n\nRewrite this email with a persuasive tone.');
+    expect(result).toEqual(
+      '\n\nRephrase and respond to this email with a persuasive tone.',
+    );
   });
 
   it('returns a prompt with all prompts if all prompts are provided', () => {
@@ -692,13 +699,15 @@ describe('getEmailRewritePrompt', () => {
     const languageComplexityPrompt =
       'using language that is easy to understand';
     const tonePrompt = 'a persuasive tone';
+    const isSendEmail = false;
     const result = getEmailRewritePrompt(
       stylePrompt,
       languageComplexityPrompt,
       tonePrompt,
+      isSendEmail,
     );
     expect(result).toEqual(
-      '\n\nRewrite this email with a formal writing style using language that is easy to understand and a persuasive tone.',
+      '\n\nRephrase and respond to this email with a formal writing style using language that is easy to understand and a persuasive tone.',
     );
   });
 });

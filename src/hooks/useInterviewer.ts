@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { callChatGPT } from '../App.logic';
 import { LoadingState } from '../App.types';
 

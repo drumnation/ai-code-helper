@@ -9,7 +9,8 @@ const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,
 );
 
-smartlookClient.init('43bc84d9a8406exxxxxxxxxb5601f5bbf8d2ed');
+process.env.REACT_APP_TRACKING === 'true' &&
+  smartlookClient.init('43bc84d9a8406exxxxxxxxxb5601f5bbf8d2ed');
 
 root.render(
   <React.StrictMode>

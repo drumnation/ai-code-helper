@@ -237,6 +237,7 @@ export async function getRootPrompt(
     stylePrompt,
     languageComplexityPrompt,
     tonePrompt,
+    isSendEmail,
   );
 
   const interviewPrompt = getInterviewPrompt(interview, sender, receiver);
@@ -260,7 +261,7 @@ export function getInterviewPrompt(
   return interview.length > 0
     ? `\n\nINTERVIEW:\nPlease read the question and answer below answered by ${receiver} in reference to ${sender} to gain context for writing an email response.\n\n${interview
         .map((topic: Interview, index: number) => {
-          return `Q: ${topic.question}\n\A: ${topic.answer}\n\n`;
+          return `Q: ${topic.question}\nA: ${topic.answer}\n\n`;
         })
         .join('')
         .trimEnd()}`
@@ -343,7 +344,7 @@ export function getLanguageComplexityPrompt(
               .map((subChoice, index) => {
                 const isLast = languageLevelSubChoices.length - 1 === index;
                 const separator = isLast ? '' : ', ';
-                const lastAnd = isLast ? ' and ' : '';
+                const lastAnd = isLast ? 'and ' : '';
                 return `${lastAnd}${subChoice.toLowerCase()}${separator}`;
               })
               .join('')}`
@@ -356,38 +357,74 @@ export function getEmailRewritePrompt(
   stylePrompt: string,
   languageComplexityPrompt: string,
   tonePrompt: string,
+  isSendEmail: boolean,
 ) {
+  let prompt = `${
+    isSendEmail ? 'Write a new' : 'Rephrase and respond to this'
+  } email with`;
+
+  if (stylePrompt) {
+    prompt += ` ${stylePrompt}`;
+  }
+
+  if (languageComplexityPrompt) {
+    prompt += ` ${languageComplexityPrompt}`;
+  }
+
+  const and = `${
+    languageComplexityPrompt !== '' || stylePrompt !== '' ? ' and' : ''
+  }`;
+
+  if (tonePrompt) {
+    prompt += `${and} ${tonePrompt}`;
+  }
+
   if (
-    stylePrompt === '' &&
-    languageComplexityPrompt === '' &&
-    tonePrompt !== ''
+    prompt === 'Rephrase and respond to this email with' ||
+    prompt === 'Write a new email with'
   ) {
-    return `\n\nRephrase and respond to this email with ${tonePrompt}.`;
-  } else if (
-    (stylePrompt !== '' || languageComplexityPrompt !== '') &&
-    tonePrompt !== ''
-  ) {
-    return `\n\nRephrase and respond to this email with ${stylePrompt} ${languageComplexityPrompt} and ${tonePrompt}.`;
-  } else if (
-    stylePrompt !== '' &&
-    languageComplexityPrompt !== '' &&
-    tonePrompt === ''
-  ) {
-    return `\n\nRephrase and respond to this email with ${stylePrompt} ${languageComplexityPrompt}.`;
-  } else if (
-    stylePrompt !== '' &&
-    (languageComplexityPrompt === '' || tonePrompt === '')
-  ) {
-    return `\n\nRephrase and respond to this email with ${stylePrompt}.`;
-  } else if (
-    languageComplexityPrompt !== '' &&
-    (stylePrompt === '' || tonePrompt === '')
-  ) {
-    return `\n\nRephrase and respond to this email with ${languageComplexityPrompt}.`;
-  } else {
     return '';
+  } else {
+    return `\n\n${prompt}.`;
   }
 }
+
+// export function getEmailRewritePrompt(
+//   stylePrompt: string,
+//   languageComplexityPrompt: string,
+//   tonePrompt: string,
+// ) {
+//   if (
+//     stylePrompt === '' &&
+//     languageComplexityPrompt === '' &&
+//     tonePrompt !== ''
+//   ) {
+//     return `\n\nRephrase and respond to this email with ${tonePrompt}.`;
+//   } else if (
+//     (stylePrompt !== '' || languageComplexityPrompt !== '') &&
+//     tonePrompt !== ''
+//   ) {
+//     return `\n\nRephrase and respond to this email with ${stylePrompt} ${languageComplexityPrompt} and ${tonePrompt}.`;
+//   } else if (
+//     stylePrompt !== '' &&
+//     languageComplexityPrompt !== '' &&
+//     tonePrompt === ''
+//   ) {
+//     return `\n\nRephrase and respond to this email with ${stylePrompt} ${languageComplexityPrompt}.`;
+//   } else if (
+//     stylePrompt !== '' &&
+//     (languageComplexityPrompt === '' || tonePrompt === '')
+//   ) {
+//     return `\n\nRephrase and respond to this email with ${stylePrompt}.`;
+//   } else if (
+//     languageComplexityPrompt !== '' &&
+//     (stylePrompt === '' || tonePrompt === '')
+//   ) {
+//     return `\n\nRephrase and respond to this email with ${languageComplexityPrompt}.`;
+//   } else {
+//     return '';
+//   }
+// }
 
 export function getFallaciesPrompt(
   includeFallacyFinder: boolean,

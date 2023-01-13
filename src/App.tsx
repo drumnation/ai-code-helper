@@ -385,37 +385,3 @@ function App() {
 }
 
 export default App;
-
-{
-  /* <ArrowDownOutlined style={{ marginTop: 50 }} />
-        <Button
-          style={{ marginBottom: 50, marginTop: 50 }}
-          type='primary'
-          onClick={generateDebatePrompt}
-          loading={loading.debatePrompt}
-        >
-          Generate Debate Prompt <SyncOutlined />
-        </Button>
-        <ArrowDownOutlined style={{ marginBottom: 50 }} />
-        <Card
-          title='One Sided Debate Argument'
-          style={{ width: '100%' }}
-          // @ts-ignore
-          align='left'
-        >
-          <pre style={{ whiteSpace: 'pre-wrap', textAlign: 'left' }}>
-            {state.oneSidedArgument}
-          </pre>
-        </Card>
-        <ArrowDownOutlined style={{ marginBottom: 50, marginTop: 50 }} />
-        <Card
-          title='Combination of Debater and Fallacy Finder'
-          style={{ width: '100%' }}
-          // @ts-ignore
-          align='left'
-        >
-          <pre style={{ whiteSpace: 'pre-wrap', textAlign: 'left' }}>
-            {state.combinedKnowledge}
-          </pre>
-          </Card> */
-}

@@ -18,7 +18,7 @@ export async function callChatGPT(
     prompt,
     temperature,
     max_tokens: 1000,
-    stop: ['INTERVIEW:', 'WRITE:'],
+    stop: ['INTERVIEW:'],
   });
   console.debug('completion', completion);
   const text = completion.data.choices[0].text;
@@ -121,7 +121,6 @@ export function formatDate(timestamp) {
   ];
   const month = months[date.getMonth()];
   const day = date.getDate();
-  const year = date.getFullYear();
   let hours: string | number = date.getHours();
   let minutes: string | number = date.getMinutes();
   let seconds: string | number = date.getSeconds();

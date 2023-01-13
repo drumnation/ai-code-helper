@@ -133,7 +133,7 @@ const GeneratePrompt = ({
                 }}
                 type='primary'
                 onClick={generateInterview}
-                loading={loading.summary}
+                loading={loading.interviewer}
               >
                 Interviewer {!loading.interviewer && <OrderedListOutlined />}
               </Button>
