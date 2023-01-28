@@ -1,6 +1,14 @@
 import { useCallback, useState } from 'react';
-import { HandleLoadingProps, LoadingState } from '../App.types';
 
+interface LoadingState {
+  testCases: boolean;
+  allUnitTests: boolean;
+}
+
+interface HandleLoadingProps {
+  type: 'testCases' | 'allUnitTests';
+  value: boolean;
+}
 interface UseLoadingReturn {
   loading: LoadingState;
   updateLoading: React.Dispatch<React.SetStateAction<LoadingState>>;
@@ -13,27 +21,17 @@ type HandleLoading = ({ type, value }: HandleLoadingProps) => void;
 
 const useLoading: UseLoading = () => {
   const [loading, updateLoading] = useState<LoadingState>({
-    fallacies: false,
-    summary: false,
-    debatePrompt: false,
-    rootPrompt: false,
-    emailResponse: false,
-    interviewer: false,
+    testCases: false,
+    allUnitTests: false,
   });
 
   const handleLoading: HandleLoading = useCallback(
     ({ type, value }) => {
       switch (type) {
-        case 'fallacies':
-          return updateLoading({ ...loading, fallacies: value });
-        case 'summary':
-          return updateLoading({ ...loading, summary: value });
-        case 'debatePrompt':
-          return updateLoading({ ...loading, debatePrompt: value });
-        case 'rootPrompt':
-          return updateLoading({ ...loading, rootPrompt: value });
-        case 'emailResponse':
-          return updateLoading({ ...loading, emailResponse: value });
+        case 'testCases':
+          return updateLoading({ ...loading, testCases: value });
+        case 'allUnitTests':
+          return updateLoading({ ...loading, allUnitTests: value });
       }
     },
     [loading],

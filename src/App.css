@@ -105,3 +105,13 @@ textarea {
     background: #eee;
   }
 }
+
+.code-card.ant-dark {
+  background-color: #1c1c1c;
+  color: #fff;
+}
+
+.code-card.ant-dark .ant-card-body {
+  background-color: #1c1c1c;
+  color: #fff;
+}

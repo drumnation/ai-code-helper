@@ -1,218 +1,74 @@
 import {
-  useDraftEmailVersions,
-  useFallacyFinder,
-  useFinalEmail,
-  useFineTuning,
-  useInterviewer,
   useLoading,
   useLocalStorage,
-  useReplyCompose,
-  useRootPrompt,
-  useSendEmailPoints,
-  useSummarizer,
+  useTestCases,
+  useUnitTests,
 } from './hooks';
 
 function useApp() {
-  const {
-    error,
-    handleUpdateIsSendEmail,
-    isSendEmail,
-    setError,
-    state,
-    updateIsSendEmail,
-    updateState,
-  } = useReplyCompose();
-
-  const { loading, handleLoading, updateLoading } = useLoading();
+  const { loading, handleLoading } = useLoading();
 
   const {
-    descriptors,
-    enableWordCount,
-    handleChangeTemperature,
-    handleChangeWordCount,
-    handleDescriptorRephrase,
-    handleLanguageLevelCategorySelect,
-    handleLanguageLevelSubChoiceSelect,
-    handleToggleFirm,
-    handleToggleWordCount,
-    handleWritingStyleRephrase,
-    isFirm,
-    languageLevelCategory,
-    languageLevelSubChoices,
-    promptWordCount,
-    temperature,
-    writingStyle,
-  } = useFineTuning();
-
-  const {
-    handleAddNewSendEmailPoint,
-    handleChangeReceiver,
-    handleChangeReplyToEmail,
-    handleChangeSender,
-    handleClearReplyToEmail,
-    handleClearSendEmailPoints,
-    handleClickSentenceSuggestions,
-    handleRemoveSendEmailPoint,
-    handleSentenceSelect,
-    handleUpdateSendEmailPoints,
-    selectedSentence,
-    sendEmailPoints,
-    sentenceSuggestions,
-    sentenceSuggestionsLoading,
-    updateSendEmailPoints,
-  } = useSendEmailPoints({
-    state,
-    temperature,
-    updateState,
-  });
-
-  const {
-    clearInterview,
-    generateInterview,
-    handleUpdateInterview,
-    interview,
-    updateInterview,
-  } = useInterviewer({
-    email: state.email,
-    loading,
-    receiver: state.receiver,
-    sender: state.sender,
-    updateLoading,
-  });
-
-  const {
-    generateSummary,
-    handleSummaryResponsesChange,
-    includeSummaryResponses,
-    summary,
-    updateSummaryRecord,
-  } = useSummarizer({
-    handleLoading,
-    setError,
-    state,
-    updateState,
-  });
-
-  const {
-    fallacies,
-    generateFallacies,
-    handleFallacyFinderChange,
-    includeFallacyFinder,
-  } = useFallacyFinder({
-    handleLoading,
-    isSendEmail,
-    setError,
-    state,
-    updateState,
-  });
-
-  const { draftEmailVersions, handleAddNewDraftEmail } = useDraftEmailVersions({
-    descriptors,
-    enableWordCount,
-    isFirm,
-    languageLevelCategory,
-    languageLevelSubChoices,
-    promptWordCount,
-    state,
-    writingStyle,
-  });
+    handleChangeTypeScriptTypes,
+    handleChangeTestFunction,
+    generateTestCases,
+    testCases,
+    testCasesPrompt,
+    typescriptTypes,
+    testFunction,
+    updateTypescriptTypes,
+    updateTestCases,
+    updateTestFunction,
+    updateTestCasesPrompt,
+  } = useTestCases({ handleLoading });
 
   useLocalStorage({
-    state,
-    updateInterview,
-    updateIsSendEmail,
-    updateSendEmailPoints,
-    updateState,
+    updateTypescriptTypes,
+    updateTestCases,
+    updateTestFunction,
   });
 
-  const { generateRootPrompt, rootPrompt, setRootPrompt } = useRootPrompt({
-    descriptors,
-    enableWordCount,
-    fallacies,
-    handleLoading,
-    includeFallacyFinder,
-    includeSummaryResponses,
-    interview,
-    isFirm,
-    isSendEmail,
-    languageLevelCategory,
-    languageLevelSubChoices,
-    promptWordCount,
-    selectedSentence,
-    sendEmailPoints,
-    sentenceSuggestions,
-    state,
-    summary,
-    writingStyle,
-  });
+  const {
+    allUnitTests,
+    clipboard,
+    handleClickUnitTests,
+    handleClickAllUnitTests,
+    handleCopyClickAll,
+    TestEditor,
+    unitTests,
+    unitTestsLoading,
+    updateUnitTests,
+  } = useUnitTests({ testFunction, typescriptTypes, handleLoading });
 
-  const { generateEmailError, generateEmailResponse, handleCopy } =
-    useFinalEmail({
-      handleLoading,
-      rootPrompt,
-      state,
-      temperature,
-      updateState,
-    });
+  const handleClear = () => {
+    updateTypescriptTypes('');
+    updateTestFunction('');
+    updateTestCases(['']);
+    updateUnitTests([]);
+    localStorage.removeItem('typescriptTypes');
+    localStorage.removeItem('testFunction');
+    localStorage.removeItem('testCases');
+  };
 
   return {
-    clearInterview,
-    descriptors,
-    draftEmailVersions,
-    enableWordCount,
-    error,
-    fallacies,
-    generateEmailError,
-    generateEmailResponse,
-    generateFallacies,
-    generateInterview,
-    generateRootPrompt,
-    generateSummary,
-    handleAddNewDraftEmail,
-    handleAddNewSendEmailPoint,
-    handleChangeReceiver,
-    handleChangeReplyToEmail,
-    handleChangeSender,
-    handleChangeTemperature,
-    handleChangeWordCount,
-    handleClearReplyToEmail,
-    handleClearSendEmailPoints,
-    handleClickSentenceSuggestions,
-    handleCopy,
-    handleDescriptorRephrase,
-    handleFallacyFinderChange,
-    handleLanguageLevelCategorySelect,
-    handleLanguageLevelSubChoiceSelect,
-    handleRemoveSendEmailPoint,
-    handleSentenceSelect,
-    handleSummaryResponsesChange,
-    handleToggleFirm,
-    handleToggleWordCount,
-    handleUpdateInterview,
-    handleUpdateIsSendEmail,
-    handleUpdateSendEmailPoints,
-    handleWritingStyleRephrase,
-    includeFallacyFinder,
-    includeSummaryResponses,
-    interview,
-    isFirm,
-    isSendEmail,
-    languageLevelCategory,
-    languageLevelSubChoices,
+    allUnitTests,
+    clipboard,
+    generateTestCases,
+    handleChangeTestFunction,
+    handleChangeTypeScriptTypes,
+    handleClear,
+    handleClickAllUnitTests,
+    handleClickUnitTests,
+    handleCopyClickAll,
     loading,
-    promptWordCount,
-    rootPrompt,
-    selectedSentence,
-    sendEmailPoints,
-    sentenceSuggestions,
-    sentenceSuggestionsLoading,
-    setRootPrompt,
-    state,
-    summary,
-    temperature,
-    updateState,
-    updateSummaryRecord,
-    writingStyle,
+    testCases,
+    testCasesPrompt,
+    TestEditor,
+    testFunction,
+    typescriptTypes,
+    unitTests,
+    unitTestsLoading,
+    updateTestCasesPrompt,
   };
 }
 
