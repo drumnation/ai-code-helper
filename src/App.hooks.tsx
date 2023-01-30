@@ -1,4 +1,6 @@
+import useE2ETests from './hooks/useE2ETests';
 import {
+  useEditor,
   useLoading,
   useLocalStorage,
   useTestCases,
@@ -40,6 +42,18 @@ function useApp() {
     updateUnitTests,
   } = useUnitTests({ testFunction, typescriptTypes, handleLoading });
 
+  const {
+    e2eCasesPrompt,
+    e2ePrompt,
+    handleUpdateE2ECasesPrompt,
+    handleUpdateE2EPrompt,
+    handleUpdateIsE2ETests,
+    updateE2ECasesPrompt,
+    isE2E,
+    testComponent,
+    handleUpdateTestComponent,
+  } = useE2ETests();
+
   const handleClear = () => {
     updateTypescriptTypes('');
     updateTestFunction('');
@@ -50,16 +64,28 @@ function useApp() {
     localStorage.removeItem('testCases');
   };
 
+  const { CustomEditor } = useEditor();
+
   return {
     allUnitTests,
     clipboard,
+    CustomEditor,
+    e2eCasesPrompt,
+    e2ePrompt,
     generateTestCases,
+    testComponent,
+    handleUpdateTestComponent,
+    updateE2ECasesPrompt,
     handleChangeTestFunction,
     handleChangeTypeScriptTypes,
     handleClear,
     handleClickAllUnitTests,
     handleClickUnitTests,
     handleCopyClickAll,
+    handleUpdateE2ECasesPrompt,
+    handleUpdateE2EPrompt,
+    handleUpdateIsE2ETests,
+    isE2E,
     loading,
     testCases,
     testCasesPrompt,

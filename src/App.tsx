@@ -19,6 +19,9 @@ function App() {
   const {
     allUnitTests,
     clipboard,
+    CustomEditor,
+    e2eCasesPrompt,
+    e2ePrompt,
     generateTestCases,
     handleChangeTestFunction,
     handleChangeTypeScriptTypes,
@@ -26,6 +29,10 @@ function App() {
     handleClickAllUnitTests,
     handleClickUnitTests,
     handleCopyClickAll,
+    handleUpdateE2ECasesPrompt,
+    handleUpdateE2EPrompt,
+    handleUpdateIsE2ETests,
+    isE2E,
     loading,
     testCases,
     testCasesPrompt,
@@ -35,6 +42,9 @@ function App() {
     unitTests,
     unitTestsLoading,
     updateTestCasesPrompt,
+    updateE2ECasesPrompt,
+    testComponent,
+    handleUpdateTestComponent,
   } = useApp();
 
   return (
@@ -60,29 +70,44 @@ function App() {
           // @ts-ignore
           align='left'
           style={{ width: '100%' }}
+          extra={
+            <Button
+              style={{ marginTop: 20 }}
+              type='primary'
+              onClick={handleUpdateIsE2ETests}
+            >
+              {!isE2E ? 'E2E Tests' : 'Unit Tests'}
+            </Button>
+          }
         >
           <Card.Meta
             title={<div style={{ color: 'white' }}>Create Tests</div>}
             description='description'
           />
-          <h3>Paste Typescript Types</h3>
-          <div style={{ border: '3px solid black' }}>
-            <Editor
-              height={150}
-              theme='vs-dark'
-              language='typescript'
-              onChange={(code) => handleChangeTypeScriptTypes(code)}
-              value={typescriptTypes}
-            />
-          </div>
+          {!isE2E && (
+            <>
+              <h3>Paste Typescript Types</h3>
+              <div style={{ border: '3px solid black' }}>
+                <Editor
+                  height={150}
+                  theme='vs-dark'
+                  language='typescript'
+                  onChange={(code) => handleChangeTypeScriptTypes(code)}
+                  value={typescriptTypes}
+                />
+              </div>
+            </>
+          )}
           <h3>Paste Function to Test</h3>
           <div style={{ border: '3px solid black' }}>
-            <Editor
-              height={150}
-              theme='vs-dark'
+            <CustomEditor
               language='typescript'
-              onChange={(code) => handleChangeTestFunction(code)}
-              value={testFunction}
+              onChange={(code) =>
+                isE2E
+                  ? handleUpdateTestComponent(code)
+                  : handleChangeTestFunction(code)
+              }
+              value={isE2E ? testComponent : testFunction}
             />
           </div>
           <h3>Test Prompt</h3>
@@ -93,8 +118,12 @@ function App() {
               color: '#fff',
               background: '#000',
             }}
-            onChange={(event) => updateTestCasesPrompt(event.target.value)}
-            value={testCasesPrompt}
+            onChange={(event) =>
+              isE2E
+                ? updateE2ECasesPrompt(event.target.value)
+                : updateTestCasesPrompt(event.target.value)
+            }
+            value={isE2E ? e2eCasesPrompt : testCasesPrompt}
             autoSize
           />
           <Button
