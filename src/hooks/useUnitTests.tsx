@@ -38,9 +38,13 @@ function useUnitTests({ testFunction, typescriptTypes, handleLoading }) {
       typescriptTypes !== '' && testFunction !== ''
         ? `\n\n\`\`\`ts\n${typescriptTypes}\n\n${testFunction}\`\`\``
         : '';
-    const prompt = `Write a jest unit test as an it statement: '${test}' for the following function:${func}`;
+    const prompt = `Write a typescript jest unit test as an it statement: '${test}' for the following function wrapped in markdown:${func}`;
     return prompt;
   };
+
+  function keepMarkdownCodeBlock(markdown) {
+    return markdown.replace(/```ts\n([\s\S]*?)\n```/g, '$1');
+  }
 
   const getUnitTests = async ({ test, index, unitTests, single = true }) => {
     const unitTestPrompt = generateUnitTestPrompt(
@@ -50,7 +54,7 @@ function useUnitTests({ testFunction, typescriptTypes, handleLoading }) {
     );
     const testCase = await callChatGPT(unitTestPrompt);
     const newUnitTests = { ...unitTests };
-    newUnitTests[index] = testCase.trimStart();
+    newUnitTests[index] = keepMarkdownCodeBlock(testCase).trimStart();
     return single ? newUnitTests : newUnitTests[index];
   };
 
@@ -80,6 +84,31 @@ function useUnitTests({ testFunction, typescriptTypes, handleLoading }) {
     });
   };
 
+  function indentCode(code) {
+    const lines = code.split('\n');
+    let indentLevel = 0;
+    let result = '';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      if (line.startsWith('}')) {
+        indentLevel--;
+      }
+
+      if (line.endsWith('{')) {
+        result += '  '.repeat(indentLevel);
+        result += line + '\n';
+        indentLevel++;
+      } else {
+        result += '  '.repeat(indentLevel);
+        result += line + '\n';
+      }
+    }
+
+    return result;
+  }
+
   const handleClickAllUnitTests = async ({
     testCases,
     unitTests: unitTests_,
@@ -97,6 +126,7 @@ function useUnitTests({ testFunction, typescriptTypes, handleLoading }) {
         allUnitTests[index] = unitTest;
       }),
     );
+
     updateUnitTests(allUnitTests);
     handleLoading({ type: 'allUnitTests', value: false });
   };
@@ -133,14 +163,14 @@ function useUnitTests({ testFunction, typescriptTypes, handleLoading }) {
           beforeMount={handleEditorWillMount}
           theme='vs-dark'
           language='typescript'
-          value={value}
+          value={indentCode(value)}
         />
       </div>
     );
   };
 
   function extractFunctionName(string) {
-    let match = string.match(/const\s+(\w+)\s*:/);
+    let match = string.match(/(?:function|const)\s+(\w+)\s*(?:\(|:)/);
     if (match) {
       return match[1];
     }

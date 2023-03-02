@@ -11,13 +11,13 @@ export async function callChatGPT(
   temperature = 0.6,
   context?,
 ): Promise<any> {
-  const completion = await openai.createCompletion({
-    model: 'text-davinci-003',
-    prompt,
+  const completion = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo',
+    messages: [{ role: 'system', content: prompt }],
     temperature,
-    max_tokens: 1000,
+    max_tokens: 3000,
   });
   console.debug('completion', completion);
-  const text = completion.data.choices[0].text;
+  const text = completion.data.choices[0].message.content;
   return text;
 }
