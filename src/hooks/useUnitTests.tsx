@@ -1,7 +1,7 @@
 import Editor, { OnMount } from '@monaco-editor/react';
 import { useRef, useState } from 'react';
 import { useClipboard } from 'use-clipboard-copy';
-import { callChatGPT } from '../App.logic';
+import { callChatGPT, indentCode } from '../App.logic';
 import { libJestSource } from '../library/monaco';
 
 let loaded = false;
@@ -83,31 +83,6 @@ function useUnitTests({ testFunction, typescriptTypes, handleLoading }) {
       unitTestsLoading: unitTestsLoading_,
     });
   };
-
-  function indentCode(code) {
-    const lines = code.split('\n');
-    let indentLevel = 0;
-    let result = '';
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-
-      if (line.startsWith('}')) {
-        indentLevel--;
-      }
-
-      if (line.endsWith('{')) {
-        result += '  '.repeat(indentLevel);
-        result += line + '\n';
-        indentLevel++;
-      } else {
-        result += '  '.repeat(indentLevel);
-        result += line + '\n';
-      }
-    }
-
-    return result;
-  }
 
   const handleClickAllUnitTests = async ({
     testCases,

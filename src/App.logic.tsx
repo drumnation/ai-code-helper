@@ -21,3 +21,28 @@ export async function callChatGPT(
   const text = completion.data.choices[0].message.content;
   return text;
 }
+
+export function indentCode(code) {
+  const lines = code.split('\n');
+  let indentLevel = 0;
+  let result = '';
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    if (line.startsWith('}')) {
+      indentLevel--;
+    }
+
+    if (line.endsWith('{')) {
+      result += '  '.repeat(indentLevel);
+      result += line + '\n';
+      indentLevel++;
+    } else {
+      result += '  '.repeat(indentLevel);
+      result += line + '\n';
+    }
+  }
+
+  return result;
+}
