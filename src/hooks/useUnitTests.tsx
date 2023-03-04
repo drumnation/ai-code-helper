@@ -38,7 +38,7 @@ function useUnitTests({ testFunction, typescriptTypes, handleLoading }) {
       typescriptTypes !== '' && testFunction !== ''
         ? `\n\n\`\`\`ts\n${typescriptTypes}\n\n${testFunction}\`\`\``
         : '';
-    const prompt = `Write a typescript jest unit test as an it statement: '${test}' for the following function wrapped in markdown:${func}`;
+    const prompt = `Write a typescript jest unit test as an it statement without a describe block: '${test}' for the following function wrapped in markdown:${func}`;
     return prompt;
   };
 

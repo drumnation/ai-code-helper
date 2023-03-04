@@ -23,6 +23,9 @@ export async function callChatGPT(
 }
 
 export function indentCode(code) {
+  if (code.trim() === '') {
+    return '';
+  }
   const lines = code.split('\n');
   let indentLevel = 0;
   let result = '';
