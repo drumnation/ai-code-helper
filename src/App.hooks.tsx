@@ -4,6 +4,7 @@ import {
   useTestCases,
   useUnitTests,
 } from './hooks';
+import { LoadingState, ITestCases, TestEditorProps } from './hooks/types';
 
 function useApp() {
   const { loading, handleLoading } = useLoading();
@@ -22,32 +23,49 @@ function useApp() {
     updateTestCasesPrompt,
   } = useTestCases({ handleLoading });
 
+  const {
+    allUnitTests,
+    clipboard,
+    handleClickAllUnitTests,
+    handleClickUnitTests,
+    customFixInstructions,
+    handleCopyClickAll,
+    handleRunTest,
+    handleChangeCustomFixInstruction,
+    handleClickFixTest,
+    handleUpdateOriginalTest,
+    handleClickFixFunction,
+    handleUpdateOriginalFunction,
+    MonacoDiffEditor,
+    TestEditor,
+    trueCount,
+    falseCount,
+    unitTests,
+    unitTestsLoading,
+    updateUnitTests,
+  } = useUnitTests({
+    testFunction,
+    typescriptTypes,
+    handleLoading,
+    handleChangeTestFunction,
+  });
+
   useLocalStorage({
     updateTypescriptTypes,
     updateTestCases,
     updateTestFunction,
-  });
-
-  const {
-    allUnitTests,
-    clipboard,
-    handleClickUnitTests,
-    handleClickAllUnitTests,
-    handleCopyClickAll,
-    TestEditor,
-    unitTests,
-    unitTestsLoading,
     updateUnitTests,
-  } = useUnitTests({ testFunction, typescriptTypes, handleLoading });
+  });
 
   const handleClear = () => {
     updateTypescriptTypes('');
     updateTestFunction('');
-    updateTestCases(['']);
+    updateTestCases([]);
     updateUnitTests([]);
     localStorage.removeItem('typescriptTypes');
     localStorage.removeItem('testFunction');
     localStorage.removeItem('testCases');
+    localStorage.removeItem('unitTests');
   };
 
   return {
@@ -55,12 +73,22 @@ function useApp() {
     clipboard,
     generateTestCases,
     handleChangeTestFunction,
+    handleChangeCustomFixInstruction,
     handleChangeTypeScriptTypes,
     handleClear,
+    customFixInstructions,
+    handleClickFixFunction,
+    handleUpdateOriginalFunction,
     handleClickAllUnitTests,
     handleClickUnitTests,
     handleCopyClickAll,
+    handleClickFixTest,
+    handleRunTest,
+    trueCount,
+    falseCount,
+    handleUpdateOriginalTest,
     loading,
+    MonacoDiffEditor,
     testCases,
     testCasesPrompt,
     TestEditor,

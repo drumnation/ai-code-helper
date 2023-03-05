@@ -1,28 +1,6 @@
-import { Configuration, OpenAIApi } from 'openai';
+import { ICountPasses, IUnitTests } from './hooks/types';
 
-const configuration = new Configuration({
-  apiKey: process.env.REACT_APP_OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
-
-export async function callChatGPT(
-  prompt: string,
-  temperature = 0.6,
-  context?,
-): Promise<any> {
-  const completion = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo',
-    messages: [{ role: 'system', content: prompt }],
-    temperature,
-    max_tokens: 3000,
-  });
-  console.debug('completion', completion);
-  const text = completion.data.choices[0].message.content;
-  return text;
-}
-
-export function indentCode(code) {
+export function indentCode(code: string) {
   if (code.trim() === '') {
     return '';
   }
@@ -43,9 +21,64 @@ export function indentCode(code) {
       indentLevel++;
     } else {
       result += '  '.repeat(indentLevel);
-      result += line + '\n';
+      result += line;
+      if (i !== lines.length - 1 && result[result.length - 1] !== '\n') {
+        result += '\n';
+      }
     }
   }
 
   return result;
+}
+
+export function removeExport(funcStr: string) {
+  const pattern = /^export\s+(function\s+\w+)/;
+  return funcStr.replace(pattern, '$1');
+}
+
+export function keepMarkdownCodeBlock(markdown: string): string {
+  return markdown.replace(/```ts\n([\s\S]*?)\n```/g, '$1');
+}
+
+export function stripType(arg: string): string {
+  return arg.replace(/:[^,)]+/g, '');
+}
+
+export function stripTypeFromFunction(funcStr: string): Function {
+  const strippedArgList = funcStr
+    .match(/\(([^)]+)\)/)[1]
+    .split(',')
+    .map(stripType)
+    .join(',');
+  const strippedFuncStr = funcStr.replace(
+    /\(([^)]+)\)/,
+    `(${strippedArgList})`,
+  );
+  return eval(`(${strippedFuncStr})`);
+}
+
+export function getNumLines(text: string) {
+  const lines = text?.split('\n');
+  return lines.length;
+}
+
+export const countPasses = (data: IUnitTests): ICountPasses => {
+  let trueCount = 0;
+  let falseCount = 0;
+  Object.values(data).forEach((obj) => {
+    if (obj.pass) {
+      trueCount++;
+    } else {
+      falseCount++;
+    }
+  });
+  return { trueCount, falseCount };
+};
+
+export function extractFunctionName(string: string) {
+  let match = string.match(/(?:function|const)\s+(\w+)\s*(?:\(|:)/);
+  if (match) {
+    return match[1];
+  }
+  return null;
 }

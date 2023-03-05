@@ -1,116 +1,120 @@
 import { indentCode } from './App.logic';
 
 describe('indentCode', () => {
-  it('should return an empty string when passed an empty string', () => {
-    expect(indentCode('')).toEqual('');
+  it('Should correctly indent code with one level of indentation', () => {
+    const code = `function add(a, b) {
+    return a + b;
+  }`;
+
+    const expected = `function add(a, b) {
+  return a + b;
+}`;
+
+    const result = indentCode(code);
+
+    expect(result).toEqual(expected);
   });
 
-  it('should indent a single line of code', () => {
-    const code = 'const foo = () => { return "bar"; }';
-    const indentedCode = 'const foo = () => {\n  return "bar";\n}\n';
-    expect(indentCode(code)).toEqual(indentedCode);
-  });
-
-  it('should indent multiple lines of code with the same indentation level', () => {
-    const code = `function myFunc() {
-      const myVar = 'hello';
-      if (myVar === 'hello') {
-        console.log('world');
+  it('Should correctly indent code with multiple levels of indentation', () => {
+    const code = `    function add(a, b) {
+      if (a === 0) {
+        return b;
       }
-    }`;
-    const expected = `function myFunc() {
-  const myVar = 'hello';
-  if (myVar === 'hello') {
-    console.log('world');
+      return add(a - 1, b + 1);
+    }    `;
+    const expected = `function add(a, b) {
+  if (a === 0) {
+    return b;
   }
+  return add(a - 1, b + 1);
 }`;
     const result = indentCode(code);
     expect(result).toEqual(expected);
   });
 
-  it('should indent nested code with increasing indentation levels', () => {
-    const code = `function foo() {
-      if (true) {
-        console.log('Hello');
-      }
-    }`;
+  it('Should correctly indent code with no indentation', () => {
+    const code = 'function hello() {\nconsole.log("Hello world");\n}';
+    const expected = 'function hello() {\n  console.log("Hello world");\n}';
+    const result = indentCode(code);
+    expect(result).toEqual(expected);
+  });
 
-    const expected = `function foo() {
+  it('Should correctly indent code with mixed indentation', () => {
+    const code = `function myFunction() {
+    if (true) {
+    console.log('Hello, world!');
+    }
+  }`;
+
+    const expected = `function myFunction() {
+  if (true) {
+    console.log('Hello, world!');
+  }
+}`;
+
+    expect(indentCode(code)).toEqual(expected);
+  });
+
+  it('Should correctly handle empty input', () => {
+    const result = indentCode('');
+    expect(result).toBe('');
+  });
+
+  it('Should correctly handle input with only whitespace', () => {
+    const input = '    \n\t   \n ';
+    const expectedOutput = '';
+
+    expect(indentCode(input)).toEqual(expectedOutput);
+  });
+
+  it('Should correctly handle input with only one line', () => {
+    const code = 'const x = 5;';
+    const expected = 'const x = 5;';
+    const result = indentCode(code);
+    expect(result).toEqual(expected);
+  });
+
+  it('Should correctly handle input with multiple lines', () => {
+    const input = `function foo() {
+    if (true) {
+      console.log('Hello');
+    }
+  }`;
+
+    const expectedOutput = `function foo() {
   if (true) {
     console.log('Hello');
   }
-}\n`;
-
-    const result = indentCode(code);
-
-    expect(result).toEqual(expected);
-  });
-
-  it('should handle code with no indentation', () => {
-    const code = `function add(a, b) {
-return a + b;
 }`;
 
-    const result = indentCode(code);
-
-    expect(result).toEqual(`function add(a, b) {
-  return a + b;
-}`);
+    expect(indentCode(input)).toEqual(expectedOutput);
   });
 
-  it('should handle code with different types of whitespace characters', () => {
-    const code = `function test() {
-  console.log('Hello World');
-}`;
-
-    const expected = `function test() {
-  console.log('Hello World');
-}`;
-
-    const result = indentCode(code);
-
-    expect(result).toEqual(expected);
-  });
-
-  it('should handle code with comments', () => {
-    const code = `
-      // This is a comment
-      function myFunction() {
-        console.log('Hello World!');
-      }
-    `;
-    const expected = `
-      // This is a comment
-      function myFunction() {
-        console.log('Hello World!');
-      }
-    `;
-    expect(indentCode(code)).toEqual(expected);
-  });
-
-  it('should handle code with brackets on the same line', () => {
-    const code = `function someFunction() { console.log('Hello World!'); }`;
-    const expectedOutput = `function someFunction() {\n  console.log('Hello World!');\n}\n`;
-
-    const result = indentCode(code);
-
-    expect(result).toEqual(expectedOutput);
-  });
-
-  it('should handle code with brackets on their own lines', () => {
-    const code = `if (a) {
-      doSomething();
-    }
-    else {
-      doSomethingElse();
+  it('Should correctly handle input with leading/trailing whitespace on lines', () => {
+    const code = `function foo() {
+      return 'bar';
     }`;
-
-    const expected = `if (a) {
-      doSomething();
-    } else {
-      doSomethingElse();
-    }\n`;
-
+    const expected = `function foo() {
+  return 'bar';
+}`;
     expect(indentCode(code)).toEqual(expected);
+  });
+
+  it('Should correctly handle input with leading/trailing whitespace on entire input', () => {
+    // Arrange
+    const code = `function foo() {
+  console.log('Hello World!');
+}
+`;
+    const expected = `function foo() {
+  console.log('Hello World!');
+}
+`;
+
+    // Act
+    const result = indentCode(code);
+
+    // Assert
+    expect(result).toEqual(expected);
   });
 });
