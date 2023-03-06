@@ -1,16 +1,24 @@
 import { CheckOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
+import Editor from '@monaco-editor/react';
 import { Button, Card } from 'antd';
 import { FC } from 'react';
-import { handleClear } from '../../App.logic';
-import { TestEditor } from '../../common';
+import { handleClear, getNumLines } from '../../App.logic';
 import { useAllUnitTests } from './AllUnitTests.hook';
 import { buttonStyles, cardStyle, titleStyles } from './AllUnitTests.styles';
 
 export const AllUnitTests: FC = () => {
-  const { allUnitTests, falseCount, handleCopyClickAll, trueCount, unitTests } =
-    useAllUnitTests();
+  const {
+    allUnitTests,
+    copied,
+    cleared,
+    falseCount,
+    handleCopyClickAll,
+    trueCount,
+    unitTests,
+    handleEditorWillMount,
+  } = useAllUnitTests();
 
-  const title = Object.values(unitTests).length > 1 && (
+  const title = (
     <>
       <h2 style={titleStyles.h2}>
         {trueCount > 0 && falseCount === 0 && (
@@ -42,7 +50,7 @@ export const AllUnitTests: FC = () => {
         type='primary'
         onClick={handleCopyClickAll}
       >
-        Copy All
+        {copied ? 'Copied!' : 'Copy All'}
         <CopyOutlined />
       </Button>
       <Button
@@ -50,22 +58,30 @@ export const AllUnitTests: FC = () => {
         type='primary'
         onClick={() => handleClear()}
       >
-        Clear All
+        {cleared ? 'Cleared!' : 'Clear All'}
         <DeleteOutlined />
       </Button>
     </Button.Group>
   );
 
   return (
-    <Card
-      // @ts-ignore
-      align='left'
-      className='code-card ant-dark'
-      style={cardStyle}
-      title={title}
-      extra={CopyClearButtonGroup}
-    >
-      <TestEditor value={allUnitTests} />
-    </Card>
+    Object.values(unitTests).length > 1 && (
+      <Card
+        // @ts-ignore
+        align='left'
+        className='code-card ant-dark'
+        style={cardStyle}
+        title={title}
+        extra={CopyClearButtonGroup}
+      >
+        <Editor
+          beforeMount={handleEditorWillMount}
+          theme='vs-dark'
+          language='typescript'
+          value={allUnitTests}
+          height={getNumLines(allUnitTests) * 19}
+        />
+      </Card>
+    )
   );
 };

@@ -21,9 +21,18 @@ const initialState: IUnitTestsState = {
 
 export const [
   useUnitTestsState,
-  { updateUnitTests, updateUnitTestsLoading, updateCustomFixInstructions },
+  {
+    deleteUnitTest,
+    updateCustomFixInstructions,
+    updateUnitTests,
+    updateUnitTestsLoading,
+  },
   useUnitTestsStore,
 ] = createReduxModule('unitTests', initialState, {
+  deleteUnitTest: produce((state: IUnitTestsState, index: number) => {
+    delete state.unitTests[index];
+    localStorage.setItem('unitTests', JSON.stringify(state.unitTests));
+  }),
   updateUnitTests: produce((state: IUnitTestsState, unitTests: IUnitTests) => {
     state.unitTests = unitTests;
     localStorage.setItem('unitTests', JSON.stringify(unitTests));

@@ -8,8 +8,9 @@ import {
 } from '../../App.logic';
 import { generateUnitTestPrompt } from '../../App.prompts';
 import { updateLoading } from '../../redux/loading.slice';
-import { useTestCasesStore } from '../../redux/testCases.slice';
+import { deleteTestCase, useTestCasesStore } from '../../redux/testCases.slice';
 import {
+  deleteUnitTest,
   updateUnitTests,
   updateUnitTestsLoading,
   useUnitTestsStore,
@@ -92,7 +93,10 @@ export const handleClickAllUnitTests = async ({
   updateLoading({ type: 'allUnitTests', loading: true });
   await Promise.all(
     testCases.map(async (test, index) => {
-      if (allUnitTests[index]?.pass !== true) {
+      const doAllPass = Object.values(allUnitTests).every(
+        (test) => test.pass === true,
+      );
+      if (allUnitTests[index]?.pass !== true || doAllPass) {
         const unitTest = await getUnitTests({
           index,
           unitTests,
@@ -248,4 +252,9 @@ export const handleRunTest = (
     '})()';
   const result = eval(IIFE);
   return result;
+};
+
+export const deleteTestCaseAndUnitTest = (index: number) => {
+  deleteTestCase(index);
+  deleteUnitTest(index);
 };

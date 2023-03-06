@@ -25,13 +25,18 @@ const initialState: ITestCasesState = {
 export const [
   useTestCasesState,
   {
-    updateTypescriptTypes,
-    updateTestFunction,
+    deleteTestCase,
     updateTestCases,
     updateTestCasesPrompt,
+    updateTestFunction,
+    updateTypescriptTypes,
   },
   useTestCasesStore,
 ] = createReduxModule('testCases', initialState, {
+  deleteTestCase: produce((state: ITestCasesState, index: number) => {
+    state.testCases.splice(index, 1);
+    localStorage.setItem('testCases', JSON.stringify(state.testCases));
+  }),
   updateTypescriptTypes: produce(
     (state: ITestCasesState, types: ITypescriptTypes) => {
       state.typescriptTypes = types;

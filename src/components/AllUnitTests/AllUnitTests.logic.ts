@@ -18,5 +18,5 @@ export function extractFunctionName(string: string) {
   if (match) {
     return match[1];
   }
-  return null;
+  return 'addAFunctionAbove';
 }

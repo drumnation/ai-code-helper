@@ -8,7 +8,7 @@ import {
 import { Button } from 'antd';
 
 import ButtonGroup from 'antd/es/button/button-group';
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useClipboard } from 'use-clipboard-copy';
 import { ITestType } from '../../../../types';
 import { handleRunTest } from '../../UnitTests.logic';
@@ -30,9 +30,22 @@ export const UnitTestButtonGroup: FC<UnitTestButtonGroupProps> = ({
   itStatement,
   type,
 }) => {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (copied) {
+      const timeout = setTimeout(() => {
+        setCopied(false);
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [copied]);
+
   const clipboard = useClipboard();
+
   const handleCopyClick = () => {
     clipboard.copy(itStatement);
+    setCopied(true);
   };
   const passFailText =
     pass === undefined ? '' : pass === true ? '(Pass)' : '(Fail)';
@@ -76,7 +89,7 @@ export const UnitTestButtonGroup: FC<UnitTestButtonGroupProps> = ({
           type='primary'
           onClick={handleCopyClick}
         >
-          Copy <CopyOutlined />
+          {copied ? 'Copied!' : 'Copy'} <CopyOutlined />
         </Button>
       ) : type === 'fixedTest' ? (
         <Button

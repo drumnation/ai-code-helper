@@ -14,7 +14,7 @@ import { DeleteOutlined } from '@ant-design/icons';
 import { handleClear } from './App.logic';
 
 const App: FC = () => {
-  useApp();
+  const { cleared, setCleared } = useApp();
   return (
     <div className='App'>
       <Header />
@@ -28,11 +28,11 @@ const App: FC = () => {
           title={<h2 style={{ color: 'white' }}>Test a Function</h2>}
           extra={
             <Button
-              style={{ background: 'red', width: 150, fontWeight: 700 }}
+              style={{ background: 'red', width: 150 }}
               type='primary'
-              onClick={() => handleClear()}
+              onClick={() => handleClear(setCleared)}
             >
-              Clear <DeleteOutlined />
+              {cleared ? 'Cleared!' : 'Clear'} <DeleteOutlined />
             </Button>
           }
         >

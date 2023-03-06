@@ -12,18 +12,16 @@ import {
 } from '../../redux/testCases.slice';
 import { useGenerateTestCases } from './GenerateTestCases.hook';
 import { generateTestCases } from './GenerateTestCases.logic';
+import { styles } from './GenerateTestCases.styles';
 
 export const GenerateTestCases: FC = () => {
   const { testCasesPrompt, testCases, typescriptTypes, testFunction } =
     useGenerateTestCases();
+
   return (
     <>
-      <h3>Paste Typescript Types</h3>
-      <div
-        style={{
-          border: '3px solid black',
-        }}
-      >
+      <h3 style={styles.h3}>Paste Typescript Types</h3>
+      <div style={styles.editorContainer}>
         <Editor
           height={150}
           theme='vs-dark'
@@ -32,12 +30,10 @@ export const GenerateTestCases: FC = () => {
           value={typescriptTypes}
         />
       </div>
-      <h3>Paste Function to Test</h3>
-      <div
-        style={{
-          border: '3px solid black',
-        }}
-      >
+      <h3 style={{ ...styles.h3, marginTop: '20px' }}>
+        Paste Function to Test
+      </h3>
+      <div style={styles.editorContainer}>
         <Editor
           height={200}
           theme='vs-dark'
@@ -46,31 +42,26 @@ export const GenerateTestCases: FC = () => {
           value={testFunction}
         />
       </div>
-      <h3>Test Prompt</h3>
+      <h3 style={styles.h3}>Test Prompt</h3>
       <TextArea
-        style={{
-          marginTop: 10,
-          marginBottom: 10,
-          color: '#fff',
-          background: '#000',
-        }}
+        style={styles.textArea}
         onChange={(event) => updateTestCasesPrompt(event.target.value)}
         value={testCasesPrompt}
         autoSize
       />
       <Button
-        style={{
-          marginTop: 20,
-        }}
+        style={styles.button}
         type='primary'
         loading={testCases}
+        disabled={testFunction === ''}
         onClick={() =>
           generateTestCases({
             testCasesPrompt,
           })
         }
       >
-        Generate Test Cases {!testCases && <DiffOutlined />}
+        {!testCases ? 'Generate Test Cases' : 'Generating'}{' '}
+        {!testCases && <DiffOutlined />}
       </Button>
     </>
   );

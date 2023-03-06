@@ -1,4 +1,4 @@
-import { indentCode } from './App.logic';
+import { indentCode, removeExport } from './App.logic';
 
 describe('indentCode', () => {
   it('Should correctly indent code with one level of indentation', () => {
@@ -116,5 +116,34 @@ describe('indentCode', () => {
 
     // Assert
     expect(result).toEqual(expected);
+  });
+});
+
+describe('removeExport', () => {
+  it('should remove export keyword from function declaration', () => {
+    const funcStr = 'export function foo() { return "bar"; }';
+    const expected = 'function foo() { return "bar"; }';
+    const result = removeExport(funcStr);
+    expect(result).toEqual(expected);
+  });
+
+  it('should not remove export keyword from non-function declarations', () => {
+    const funcStr = `export const myVar = 'hello';
+                   export class MyClass {};
+                   export enum MyEnum {};`;
+    const result = removeExport(funcStr);
+    expect(result).toEqual(funcStr);
+  });
+
+  it('should not modify function declaration without export keyword', () => {
+    const input = 'function myFunc(): void { console.log("hello world"); }';
+    const output = removeExport(input);
+    expect(output).toBe(input);
+  });
+
+  it('should not modify non-function declarations', () => {
+    const input = 'const x = 5;';
+    const output = removeExport(input);
+    expect(output).toEqual(input);
   });
 });

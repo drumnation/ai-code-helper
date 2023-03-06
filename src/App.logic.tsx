@@ -69,7 +69,7 @@ export function getNumLines(text: string) {
   return lines.length;
 }
 
-export const handleClear = () => {
+export const handleClear = (setCleared?: (cleared: boolean) => void) => {
   updateTypescriptTypes('');
   updateTestFunction('');
   updateTestCases([]);
@@ -78,4 +78,5 @@ export const handleClear = () => {
   localStorage.removeItem('testFunction');
   localStorage.removeItem('testCases');
   localStorage.removeItem('unitTests');
+  setCleared && setCleared(true);
 };
