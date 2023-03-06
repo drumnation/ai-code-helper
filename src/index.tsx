@@ -1,20 +1,30 @@
-import React from 'react';
+import React, { FC } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import smartlookClient from 'smartlook-client';
+
+import './redux/store'; // <<< import before calling createReduxModule or Provider
+import { Provider } from 'hooks-for-redux';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,
 );
 
-process.env.REACT_APP_TRACKING === 'true' &&
-  smartlookClient.init('43bc84d9a8406exxxxxxxxxb5601f5bbf8d2ed');
+const Root: FC = () => {
+  return (
+    <>
+      {/* @ts-ignore */}
+      <Provider>
+        <App />
+      </Provider>
+    </>
+  );
+};
 
 root.render(
   <React.StrictMode>
-    <App />
+    <Root />
   </React.StrictMode>,
 );
 

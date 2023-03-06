@@ -8,17 +8,29 @@ import {
 import { Button } from 'antd';
 
 import ButtonGroup from 'antd/es/button/button-group';
+import { FC } from 'react';
+import { useClipboard } from 'use-clipboard-copy';
+import { ITestType } from '../../../../types';
+import { handleRunTest } from '../../UnitTests.logic';
+import {
+  handleUpdateOriginalFunction,
+  handleUpdateOriginalTest,
+} from './UnitTestButtonGroup.logic';
 
-export function UnitTestButtonGroup({
-  clipboard,
-  handleRunTest,
+interface UnitTestButtonGroupProps {
+  index: number;
+  pass: boolean;
+  itStatement: string;
+  type: ITestType;
+}
+
+export const UnitTestButtonGroup: FC<UnitTestButtonGroupProps> = ({
   index,
   pass,
   itStatement,
-  handleUpdateOriginalTest = ({ index }) => {},
-  handleUpdateOriginalFunction = ({ index }) => {},
   type,
-}) {
+}) => {
+  const clipboard = useClipboard();
   const handleCopyClick = () => {
     clipboard.copy(itStatement);
   };
@@ -95,4 +107,4 @@ export function UnitTestButtonGroup({
       )}
     </ButtonGroup>
   );
-}
+};

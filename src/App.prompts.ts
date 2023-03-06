@@ -1,13 +1,12 @@
-import { IGenerateTestCasesPrompt } from './hooks/types';
+import { IGenerateTestCasesPrompt } from './types';
 
 export const generateTestCasesPrompt: IGenerateTestCasesPrompt = ({
   typescriptTypes,
   testFunction,
 }) => {
   const hasData = testFunction !== '';
-  const func = hasData
-    ? `\n\n\`\`\`ts\n${typescriptTypes}\n\n${testFunction}\`\`\``
-    : '';
+  const hasTypes = typescriptTypes !== '' ? `\n${typescriptTypes}\n` : '';
+  const func = hasData ? `\n\n\`\`\`ts\n${hasTypes}${testFunction}\`\`\`` : '';
   const prompt = hasData
     ? `Given the following function please generate a javascript array of test case strings in english that would provide full test coverage. Strip any headings and only return an array of strings as stringified json.${func}`
     : 'Add typescript definitions and a function.';

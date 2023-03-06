@@ -1,5 +1,3 @@
-import { FC } from 'react';
-
 export interface LoadingState {
   testCases: boolean;
   allUnitTests: boolean;
@@ -13,8 +11,6 @@ export interface HandleLoadingProps {
 }
 
 export interface UseLoadingReturn {
-  loading: LoadingState;
-  updateLoading: React.Dispatch<React.SetStateAction<LoadingState>>;
   handleLoading: ({ type, value }: HandleLoadingProps) => void;
 }
 
@@ -83,13 +79,6 @@ export function isIUnitTests(tests: any): tests is IUnitTests {
 
 export function isIUnitTest(tests: any): tests is String {
   return typeof tests === 'string' && tests !== null;
-}
-
-export interface UseUnitTestProps {
-  testFunction: ITestFunction;
-  typescriptTypes: ITypescriptTypes;
-  handleLoading: HandleLoading;
-  handleChangeTestFunction: (code: string) => void;
 }
 
 export interface IHandleUnitTestsLoading {
@@ -172,3 +161,5 @@ export interface ICountPasses {
   trueCount: number;
   falseCount: number;
 }
+
+export type ITestType = 'original' | 'fixedTest' | 'fixedFunction';

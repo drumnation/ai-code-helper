@@ -1,4 +1,11 @@
-import { ICountPasses, IUnitTests } from './hooks/types';
+/* eslint-disable no-eval */
+
+import {
+  updateTestCases,
+  updateTestFunction,
+  updateTypescriptTypes,
+} from './redux/testCases.slice';
+import { updateUnitTests } from './redux/unitTests.slice';
 
 export function indentCode(code: string) {
   if (code.trim() === '') {
@@ -62,23 +69,13 @@ export function getNumLines(text: string) {
   return lines.length;
 }
 
-export const countPasses = (data: IUnitTests): ICountPasses => {
-  let trueCount = 0;
-  let falseCount = 0;
-  Object.values(data).forEach((obj) => {
-    if (obj.pass) {
-      trueCount++;
-    } else {
-      falseCount++;
-    }
-  });
-  return { trueCount, falseCount };
+export const handleClear = () => {
+  updateTypescriptTypes('');
+  updateTestFunction('');
+  updateTestCases([]);
+  updateUnitTests([]);
+  localStorage.removeItem('typescriptTypes');
+  localStorage.removeItem('testFunction');
+  localStorage.removeItem('testCases');
+  localStorage.removeItem('unitTests');
 };
-
-export function extractFunctionName(string: string) {
-  let match = string.match(/(?:function|const)\s+(\w+)\s*(?:\(|:)/);
-  if (match) {
-    return match[1];
-  }
-  return null;
-}

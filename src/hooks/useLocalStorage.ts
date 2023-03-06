@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
-import { UseLocalStorageProps } from './types';
-
-function useLocalStorage({
-  updateTypescriptTypes,
+import {
   updateTestCases,
   updateTestFunction,
-  updateUnitTests,
-}: UseLocalStorageProps) {
+  updateTypescriptTypes,
+} from '../redux/testCases.slice';
+import { updateUnitTests } from '../redux/unitTests.slice';
+
+export function useLocalStorage() {
   useEffect(() => {
     const storedTypescriptTypes = localStorage.getItem('typescriptTypes');
     const storedTestFunction = localStorage.getItem('testFunction');
@@ -20,5 +20,3 @@ function useLocalStorage({
 
   return {};
 }
-
-export default useLocalStorage;

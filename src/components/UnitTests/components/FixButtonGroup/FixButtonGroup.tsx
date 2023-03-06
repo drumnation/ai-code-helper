@@ -1,45 +1,35 @@
 import { ProfileOutlined, SettingOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
-import CustomFixInstructionTextbox from './CustomFixInstructionTexbox';
-
-export function FixButtonGroup({
-  handleClickFixTest,
+import CustomFixInstructionTextbox from '../CustomFixInstructionTextbox/CustomFixInstructionTextbox';
+import { ICustomFixInstructions, IUnitTests } from '../../../../types';
+import {
   handleClickFixFunction,
-  loading,
+  handleClickFixTest,
+} from './FixButtonGroup.logic';
+import { useLoadingState } from '../../../../redux/loading.slice';
+
+export const FixButtonGroup = ({
   index,
   unitTests,
   customFixInstructions,
-  handleChangeCustomFixInstruction,
-}) {
+}: {
+  index: number;
+  unitTests: IUnitTests;
+  customFixInstructions: ICustomFixInstructions;
+}) => {
+  const { fixTest, fixFunction } = useLoadingState();
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <CustomFixInstructionTextbox
-          onPressEnter={() =>
-            handleClickFixTest({
-              index,
-              unitTests,
-              customInstruction: customFixInstructions[index]?.fixTest ?? '',
-            })
-          }
           customFixInstructions={customFixInstructions}
           type='fixTest'
           index={index}
-          handleChangeCustomFixInstruction={handleChangeCustomFixInstruction}
         />
         <CustomFixInstructionTextbox
-          onPressEnter={() =>
-            handleClickFixFunction({
-              index,
-              unitTests,
-              customInstruction:
-                customFixInstructions[index]?.fixFunction ?? '',
-            })
-          }
           customFixInstructions={customFixInstructions}
           type='fixFunction'
           index={index}
-          handleChangeCustomFixInstruction={handleChangeCustomFixInstruction}
         />
       </div>
       <div
@@ -55,7 +45,7 @@ export function FixButtonGroup({
             width: 300,
             background: '#ff6600',
           }}
-          loading={loading.fixTest}
+          loading={fixTest}
           type='primary'
           onClick={() =>
             handleClickFixTest({
@@ -65,8 +55,7 @@ export function FixButtonGroup({
             })
           }
         >
-          Fix Test to Match Function Output{' '}
-          {!loading.fixTest && <ProfileOutlined />}
+          Fix Test to Match Function Output {!fixTest && <ProfileOutlined />}
         </Button>
         <Button
           style={{
@@ -75,14 +64,21 @@ export function FixButtonGroup({
             width: 300,
             background: '#ff6600',
           }}
-          loading={loading.fixFunction}
+          loading={fixFunction}
           type='primary'
-          onClick={() => handleClickFixFunction({ index, unitTests })}
+          onClick={() =>
+            handleClickFixFunction({
+              index,
+              unitTests,
+              customInstruction:
+                customFixInstructions[index]?.fixFunction ?? '',
+            })
+          }
         >
           Fix Function to Match Expected Output{' '}
-          {!loading.fixFunction && <SettingOutlined />}
+          {!fixFunction && <SettingOutlined />}
         </Button>
       </div>
     </div>
   );
-}
+};

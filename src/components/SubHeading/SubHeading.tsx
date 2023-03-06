@@ -3,7 +3,6 @@ import { FC } from 'react';
 export const SubHeading: FC = () => {
   return (
     <>
-      {' '}
       <h3
         style={{
           marginBottom: 0,

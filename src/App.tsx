@@ -1,6 +1,6 @@
 import './App.css';
 
-import { Card } from 'antd';
+import { Button, Card } from 'antd';
 import {
   AllUnitTests,
   GenerateTestCases,
@@ -9,8 +9,12 @@ import {
   UnitTests,
 } from './components';
 import { FC } from 'react';
+import useApp from './App.hooks';
+import { DeleteOutlined } from '@ant-design/icons';
+import { handleClear } from './App.logic';
 
 const App: FC = () => {
+  useApp();
   return (
     <div className='App'>
       <Header />
@@ -21,10 +25,17 @@ const App: FC = () => {
           // @ts-ignore
           align='left'
           style={{ width: '100%' }}
+          title={<h2 style={{ color: 'white' }}>Test a Function</h2>}
+          extra={
+            <Button
+              style={{ background: 'red', width: 150, fontWeight: 700 }}
+              type='primary'
+              onClick={() => handleClear()}
+            >
+              Clear <DeleteOutlined />
+            </Button>
+          }
         >
-          <Card.Meta
-            title={<h2 style={{ color: 'white' }}>Test a Function</h2>}
-          />
           <GenerateTestCases />
           <UnitTests />
           <AllUnitTests />
