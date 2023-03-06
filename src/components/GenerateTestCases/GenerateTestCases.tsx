@@ -13,6 +13,7 @@ import {
 import { useGenerateTestCases } from './GenerateTestCases.hook';
 import { generateTestCases } from './GenerateTestCases.logic';
 import { styles } from './GenerateTestCases.styles';
+import { getNumLines } from '../../App.logic';
 
 export const GenerateTestCases: FC = () => {
   const { testCasesPrompt, testCases, typescriptTypes, testFunction } =
@@ -23,7 +24,7 @@ export const GenerateTestCases: FC = () => {
       <h3 style={styles.h3}>Paste Typescript Types</h3>
       <div style={styles.editorContainer}>
         <Editor
-          height={150}
+          height={getNumLines(typescriptTypes) * 19}
           theme='vs-dark'
           language='typescript'
           onChange={(code) => updateTypescriptTypes(code)}
@@ -35,7 +36,7 @@ export const GenerateTestCases: FC = () => {
       </h3>
       <div style={styles.editorContainer}>
         <Editor
-          height={200}
+          height={getNumLines(testFunction) * 19}
           theme='vs-dark'
           language='typescript'
           onChange={(code) => updateTestFunction(code)}

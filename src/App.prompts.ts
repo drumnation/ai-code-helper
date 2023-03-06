@@ -8,7 +8,8 @@ export const generateTestCasesPrompt: IGenerateTestCasesPrompt = ({
   const hasTypes = typescriptTypes !== '' ? `\n${typescriptTypes}\n` : '';
   const func = hasData ? `\n\n\`\`\`ts\n${hasTypes}${testFunction}\`\`\`` : '';
   const prompt = hasData
-    ? `Given the following function please generate a javascript array of test case strings in english that would provide full test coverage. Strip any headings and only return an array of strings as stringified json.${func}`
+    ? // ? `Given the following function and it's typescript definitions please generate a javascript array of brief test case strings that don't contain the output data, designed for the description of unit tests, in english that would provide full test coverage. Strip any headings and only return an array of strings as stringified json.${func}`
+      `Please provide a list of edge cases in English language as brief test case strings for the given function, without including the output data. These test cases should cover all possible scenarios for full test coverage. The output should be a JavaScript array of strings in JSON format, without any headings or descriptions. Example: "Should correctly indent code with multiple levels of indentation."${func}`
     : 'Add typescript definitions and a function.';
   return prompt;
 };
