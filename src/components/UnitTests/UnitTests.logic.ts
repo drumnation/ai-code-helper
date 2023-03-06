@@ -11,6 +11,7 @@ import { updateLoading } from '../../redux/loading.slice';
 import { deleteTestCase, useTestCasesStore } from '../../redux/testCases.slice';
 import {
   deleteUnitTest,
+  deleteUnitTestLoading,
   updateUnitTests,
   updateUnitTestsLoading,
   useUnitTestsStore,
@@ -257,4 +258,5 @@ export const handleRunTest = (
 export const deleteTestCaseAndUnitTest = (index: number) => {
   deleteTestCase(index);
   deleteUnitTest(index);
+  deleteUnitTestLoading(index);
 };

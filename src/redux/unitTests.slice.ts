@@ -23,6 +23,7 @@ export const [
   useUnitTestsState,
   {
     deleteUnitTest,
+    deleteUnitTestLoading,
     updateCustomFixInstructions,
     updateUnitTests,
     updateUnitTestsLoading,
@@ -36,6 +37,9 @@ export const [
   updateUnitTests: produce((state: IUnitTestsState, unitTests: IUnitTests) => {
     state.unitTests = unitTests;
     localStorage.setItem('unitTests', JSON.stringify(unitTests));
+  }),
+  deleteUnitTestLoading: produce((state: IUnitTestsState, index: number) => {
+    delete state.unitTestsLoading[index];
   }),
   updateUnitTestsLoading: produce(
     (
