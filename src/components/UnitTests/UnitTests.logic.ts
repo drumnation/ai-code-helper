@@ -1,11 +1,7 @@
 /* eslint-disable no-eval */
 
 import { callChatGPT } from '../../api';
-import {
-  indentCode,
-  keepMarkdownCodeBlock,
-  stripTypeFromFunction,
-} from '../../App.logic';
+import { keepMarkdownCodeBlock } from '../../App.logic';
 import { generateUnitTestPrompt } from '../../App.prompts';
 import { updateLoading } from '../../redux/loading.slice';
 import { deleteTestCase, useTestCasesStore } from '../../redux/testCases.slice';
@@ -128,6 +124,23 @@ export const handleRunTest = (
 ) => {
   const { unitTests } = useUnitTestsStore.getState();
   const { testFunction } = useTestCasesStore.getState();
+
+  function myMock(implementation) {
+    const mockFn = function (...args) {
+      mockFn.mock.calls.push(args);
+      const returnValue = implementation ? implementation(...args) : undefined;
+      mockFn.mock.results.push({ value: returnValue });
+      return returnValue;
+    };
+
+    mockFn.mock = {
+      calls: [],
+      results: [],
+    };
+
+    return mockFn;
+  }
+
   function expect(value) {
     return {
       value,
@@ -153,6 +166,24 @@ export const handleRunTest = (
           pass,
           output: value,
           expectedValue: matcher,
+        };
+      },
+      toContain(expected, isNot = false) {
+        const pass = value.includes(expected) !== isNot;
+        return {
+          pass,
+          output: value,
+          expectedValue: expected,
+        };
+      },
+      toHaveBeenCalledWith(...expected) {
+        const pass = value.mock.calls.some(
+          (call) => JSON.stringify(call) === JSON.stringify(expected),
+        );
+        return {
+          pass,
+          output: value.mock.calls,
+          expectedValue: expected,
         };
       },
     };
@@ -234,25 +265,62 @@ export const handleRunTest = (
     }
   }
 
-  const IIFE =
-    '(() => {' +
-    '\n' +
-    stripTypeFromFunction(testFunction) +
-    '\n\n' +
-    indentCode +
-    '\n\n' +
-    modifyTestFunction +
-    '\n\n' +
-    it +
-    '\n\n' +
-    expect +
-    '\n\n' +
-    'return ' +
-    itStatement +
-    '\n' +
-    '})()';
-  const result = eval(IIFE);
-  return result;
+  function transpileTypeScriptToJavaScript(tsCode) {
+    // Create a new TypeScript compiler instance
+    const tsCompiler = require('typescript');
+    const compilerOptions = {
+      target: tsCompiler.ScriptTarget.esnext,
+      inlineSources: true,
+      noEmitHelpers: true,
+    };
+    const transpileOptions = { compilerOptions };
+
+    // Transpile the TypeScript code to JavaScript
+    const transpiledCode = tsCompiler.transpileModule(
+      tsCode,
+      transpileOptions,
+    ).outputText;
+
+    // Return the transpiled JavaScript code
+    return transpiledCode;
+  }
+
+  try {
+    const IIFE =
+      '(() => {' +
+      '\n\n' +
+      myMock +
+      '\n\n' +
+      `const jest = { fn: myMock };` +
+      '\n' +
+      `const type = '${type}';` +
+      '\n' +
+      `const index = ${index};` +
+      '\n' +
+      `const bulk = ${bulk};` +
+      '\n\n' +
+      it +
+      '\n\n' +
+      expect +
+      '\n\n' +
+      transpileTypeScriptToJavaScript(testFunction) +
+      '\n\n' +
+      modifyTestFunction +
+      '\n\n' +
+      'return ' +
+      transpileTypeScriptToJavaScript(itStatement) +
+      '\n' +
+      '})()';
+    console.debug(
+      'transpileTypeScriptToJavaScript',
+      transpileTypeScriptToJavaScript(testFunction),
+    );
+    console.debug('* IIFE', IIFE);
+    const result = eval(IIFE);
+    return result;
+  } catch (err) {
+    console.debug('err', err);
+  }
 };
 
 export const deleteTestCaseAndUnitTest = (index: number) => {

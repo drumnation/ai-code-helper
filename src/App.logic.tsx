@@ -47,23 +47,6 @@ export function keepMarkdownCodeBlock(markdown: string): string {
   return markdown.replace(/```ts\n([\s\S]*?)\n```/g, '$1');
 }
 
-export function stripType(arg: string): string {
-  return arg.replace(/:[^,)]+/g, '');
-}
-
-export function stripTypeFromFunction(funcStr: string): Function {
-  const strippedArgList = funcStr
-    .match(/\(([^)]+)\)/)[1]
-    .split(',')
-    .map(stripType)
-    .join(',');
-  const strippedFuncStr = funcStr.replace(
-    /\(([^)]+)\)/,
-    `(${strippedArgList})`,
-  );
-  return eval(`(${strippedFuncStr})`);
-}
-
 export function getNumLines(text: string) {
   const lines = text?.split('\n');
   return lines.length;
